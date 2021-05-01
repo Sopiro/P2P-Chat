@@ -1,10 +1,13 @@
 package org.sopiro.chat
 
-import org.sopiro.chat.parser.Parser
+import kotlinx.coroutines.*
+import org.sopiro.chat.server.Server
 import java.awt.BorderLayout
 import java.awt.FlowLayout
-import java.time.LocalDateTime
+import java.awt.event.WindowAdapter
+import java.awt.event.WindowEvent
 import javax.swing.*
+import kotlin.math.log
 
 class ServerWindow(title: String) : JFrame(title)
 {
@@ -15,7 +18,10 @@ class ServerWindow(title: String) : JFrame(title)
     private var enterBtn: JButton
     private var cmdLine: JTextField
 
+    private var logger: Logger
     private val defaultMsg = "start -p 1234"
+
+    private var server: Server? = null
 
     init
     {
@@ -33,17 +39,19 @@ class ServerWindow(title: String) : JFrame(title)
         foot.layout = FlowLayout(FlowLayout.RIGHT)
 
         screen = JTextArea(20, 80)
+        logger = Logger(screen)
+
         screen.lineWrap = true
         screen.isEditable = false
         scroller = JScrollPane(screen, 20, 30)
         enterBtn = JButton("Enter")
-        cmdLine = JTextField(80)
+        enterBtn.addActionListener {
+            execute()
+        }
 
+        cmdLine = JTextField(80)
         cmdLine.addActionListener {
-            when (it.id)
-            {
-                1001 -> enterBtn.doClick()
-            }
+            enterBtn.doClick()
         }
 
         body.add(scroller, BorderLayout.CENTER)
@@ -51,31 +59,6 @@ class ServerWindow(title: String) : JFrame(title)
         foot.add(enterBtn)
 
         cmdLine.text = defaultMsg
-        enterBtn.addActionListener {
-
-            val command = Parser(cmdLine.text)
-
-            when (command.cmd)
-            {
-                "start" ->
-                {
-                    try
-                    {
-                        val port = Integer.parseInt(command.getOption("p"))
-                        start(port)
-                    } catch (e: NumberFormatException)
-                    {
-                        start(1234)
-                    }
-                }
-
-                "error" -> println("error")
-
-                else -> println(cmdLine.text)
-            }
-
-            cmdLine.text = ""
-        }
 
         add(body, BorderLayout.CENTER)
         add(foot, BorderLayout.SOUTH)
@@ -89,16 +72,75 @@ class ServerWindow(title: String) : JFrame(title)
         isVisible = true
     }
 
-    private fun appendMessage(msg: String)
+    private fun execute()
     {
-        val currentDate = LocalDateTime.now()
+        val rawText = cmdLine.text
+        val command = Parser(rawText)
 
-        screen.append("$currentDate|    ")
-        screen.append(msg + "\n")
+        when (command.cmd)
+        {
+            "start" ->
+            {
+                try
+                {
+                    val port = Integer.parseInt(command.getOption("p"))
+                    tryStartServer(port)
+                } catch (e: NumberFormatException)
+                {
+                    logger.log("Sets port with -p option correctly")
+                }
+            }
+
+            "error" ->
+            {
+                logger.log("Error: $rawText")
+            }
+
+            "ls" ->
+            {
+                logger.log("${server!!.clients.size} Clients are existing")
+            }
+
+            "cls" ->
+            {
+                screen.text = ""
+            }
+
+            "exit" ->
+            {
+                server!!.terminate()
+                dispose()
+            }
+
+            else -> logger.log("$rawText")
+        }
+
+        cmdLine.text = ""
     }
 
-    fun start(port: Int)
+    private fun tryStartServer(port: Int)
     {
-        appendMessage("Server started on port: $port")
+        if (server == null)
+        {
+            server = Server(port, logger)
+
+            addWindowListener(object : WindowAdapter()
+            {
+                override fun windowClosing(e: WindowEvent)
+                {
+                    server!!.terminate()
+                    super.windowClosing(e)
+                }
+
+            })
+
+            CoroutineScope(Dispatchers.Default).launch {
+                server!!.start()
+            }
+        } else
+        {
+            logger.log("Server is already online")
+            return
+        }
     }
 }

@@ -1,9 +1,11 @@
-package org.sopiro.chat.parser
+package org.sopiro.chat
 
 
 class Parser(str: String)
 {
     var cmd: String
+        private set
+
     val options: Map<String, String>
 
     init
