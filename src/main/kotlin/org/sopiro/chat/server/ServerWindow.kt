@@ -1,13 +1,15 @@
-package org.sopiro.chat
+package org.sopiro.chat.server
 
-import kotlinx.coroutines.*
-import org.sopiro.chat.server.Server
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import org.sopiro.chat.utils.Logger
+import org.sopiro.chat.utils.Parser
 import java.awt.BorderLayout
 import java.awt.FlowLayout
 import java.awt.event.WindowAdapter
 import java.awt.event.WindowEvent
 import javax.swing.*
-import kotlin.math.log
 
 class ServerWindow(title: String) : JFrame(title)
 {
@@ -75,15 +77,15 @@ class ServerWindow(title: String) : JFrame(title)
     private fun execute()
     {
         val rawText = cmdLine.text
-        val command = Parser(rawText)
+        val parser = Parser(rawText)
 
-        when (command.cmd)
+        when (parser.cmd)
         {
             "start" ->
             {
                 try
                 {
-                    val port = Integer.parseInt(command.getOption("p"))
+                    val port = Integer.parseInt(parser.getOption("p"))
                     tryStartServer(port)
                 } catch (e: NumberFormatException)
                 {
@@ -98,12 +100,17 @@ class ServerWindow(title: String) : JFrame(title)
 
             "ls" ->
             {
-                logger.log("${server!!.clients.size} Clients are existing")
+                logger.log("${server!!.numClients} Clients are existing")
             }
 
             "cls" ->
             {
                 screen.text = ""
+            }
+
+            "noti" ->
+            {
+                server!!.notifyToAll(parser.getOption("m").toString());
             }
 
             "exit" ->

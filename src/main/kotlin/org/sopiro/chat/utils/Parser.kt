@@ -1,14 +1,32 @@
-package org.sopiro.chat
+package org.sopiro.chat.utils
 
 
-class Parser(str: String)
+class Parser(val str: String)
 {
-    var cmd: String
+    lateinit var cmd: String
         private set
 
-    val options: Map<String, String>
+    lateinit var options: HashMap<String, String>
 
     init
+    {
+        if (str.startsWith("|"))
+        {
+            parseData(str.substring(1, str.length))
+        } else
+        {
+            parseCommand(str)
+        }
+    }
+
+    private fun parseData(str: String)
+    {
+        val tokens = str.split("|")
+
+        cmd = tokens[0]
+    }
+
+    private fun parseCommand(str: String)
     {
         val tokens = str.split(" ")
 
@@ -37,10 +55,13 @@ class Parser(str: String)
                 continue
             }
 
-            val starting = token.startsWith("\"") && !token.endsWith("\"")
-            val mid = !token.startsWith("\"") && !token.endsWith("\"")
-            val ending = !token.startsWith("\"") && token.endsWith("\"")
-            val surrounded = token.startsWith("\"") && token.endsWith("\"")
+            val starts = token.startsWith("\"")
+            val ends = token.endsWith("\"")
+
+            val starting = starts && !ends
+            val mid = !starts && !ends
+            val ending = !starts && ends
+            val surrounded = starts && ends
 
             if ((option != "" && content == "") || (option != "" && inside))
             {

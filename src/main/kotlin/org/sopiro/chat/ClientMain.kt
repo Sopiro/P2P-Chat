@@ -1,17 +1,17 @@
 package org.sopiro.chat
 
-import java.io.BufferedWriter
-import java.io.PrintWriter
-import java.net.Socket
+import org.sopiro.chat.client.Client
+import org.sopiro.chat.client.ClientWindow
 
 fun main()
 {
-    val soc = Socket("127.0.0.1", 1234)
+    val client = Client("127.0.0.1", 1234)
+//    val client = Client("222.101.80.229", 1234)
 
-    val write: PrintWriter = PrintWriter(soc.getOutputStream())
+    while (!client.readyToGo)
+    {
+        Thread.sleep(10)
+    }
 
-    write.println("Hello can you hear me?")
-    write.flush()
-
-    Thread.sleep(100)
+    val window = ClientWindow("Client", client)
 }
