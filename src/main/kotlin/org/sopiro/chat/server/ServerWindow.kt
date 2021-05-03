@@ -1,8 +1,5 @@
 package org.sopiro.chat.server
 
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import org.sopiro.chat.utils.Logger
 import org.sopiro.chat.utils.Parser
 import java.awt.BorderLayout
@@ -11,10 +8,9 @@ import java.awt.event.WindowAdapter
 import java.awt.event.WindowEvent
 import javax.swing.*
 
-class ServerWindow(title: String) : JFrame(title)
+class ServerWindow(title: String) : Server()
 {
-    private val scope = CoroutineScope(Dispatchers.Default)
-
+    private var window: JFrame = JFrame(title)
     private var body: JPanel
     private var foot: JPanel
     private var screen: JTextArea
@@ -23,17 +19,18 @@ class ServerWindow(title: String) : JFrame(title)
     private var cmdLine: JTextField
 
     private var logger: Logger
+
     private val defaultMsg = "start -p 1234"
 
-    private var server: Server? = null
+    private var isStarted: Boolean = false
 
     init
     {
         // JFrame settings
-        isResizable = false
-        defaultCloseOperation = EXIT_ON_CLOSE
+        window.isResizable = false
+        window.defaultCloseOperation = JFrame.EXIT_ON_CLOSE
 
-        (contentPane as JComponent).border = BorderFactory.createEmptyBorder(10, 10, 10, 10)
+        (window.contentPane as JComponent).border = BorderFactory.createEmptyBorder(10, 10, 10, 10)
 
         // Define controls
         body = JPanel()
@@ -64,27 +61,28 @@ class ServerWindow(title: String) : JFrame(title)
 
         cmdLine.text = defaultMsg
 
-        add(body, BorderLayout.CENTER)
-        add(foot, BorderLayout.SOUTH)
+        window.add(body, BorderLayout.CENTER)
+        window.add(foot, BorderLayout.SOUTH)
 
-        pack()
+        window.pack()
 
-        addWindowListener(object : WindowAdapter()
+        window.addWindowListener(object : WindowAdapter()
         {
             override fun windowClosing(e: WindowEvent)
             {
-                if (server != null)
-                    server!!.terminate()
                 super.windowClosing(e)
+                terminate()
             }
 
         })
 
-        setLocationRelativeTo(null)
+        window.setLocationRelativeTo(null)
 
         cmdLine.requestFocus()
 
-        isVisible = true
+        window.isVisible = true
+
+        RoomManager.newRoom("127.0.0.1", 1234, "테스트 방", "나다", 10)
     }
 
     private fun interpret()
@@ -113,7 +111,7 @@ class ServerWindow(title: String) : JFrame(title)
 
             "ls" ->
             {
-                logger.log("${server!!.numClients} Clients are existing")
+                logger.log("$numClients Clients are existing")
             }
 
             "cls" ->
@@ -126,14 +124,14 @@ class ServerWindow(title: String) : JFrame(title)
                 if (parser.getOption("m") == null) return
 
                 val msg = parser.getOption("m").toString()
-                server!!.notifyToAll(msg);
+                notifyToAll(msg);
                 logger.log("Notified to all clients: $msg")
             }
 
             "exit" ->
             {
-                server!!.terminate()
-                dispose()
+                terminate()
+                window.dispose()
             }
 
             else -> logger.log(rawText)
@@ -142,19 +140,50 @@ class ServerWindow(title: String) : JFrame(title)
         cmdLine.text = ""
     }
 
+    override fun onClientEnter(handle: ClientHandle)
+    {
+        logger.log("Got one ${handle.socket.localAddress}")
+
+        // Send room info
+        send(handle, RoomManager.getRoomInfo())
+    }
+
+
+    override fun onReceiveData(handle: ClientHandle, parser: Parser)
+    {
+        println(parser.str)
+
+        when (parser.cmd)
+        {
+            "msg" ->
+            {
+                logger.log(parser.getOption("m").toString())
+            }
+        }
+    }
+
+    override fun onClientDisconnect(handle: ClientHandle)
+    {
+        logger.log("${handle.socket.inetAddress} goes out")
+
+        super.onClientDisconnect(handle)
+    }
+
     private fun tryStartServer(port: Int)
     {
-        if (server == null)
-        {
-            server = Server(port, logger)
-
-            scope.launch {
-                server!!.start()
-            }
-        } else
+        if (isStarted)
         {
             logger.log("Server is already online")
             return
         }
+
+        isStarted = true
+        super.start(port, logger)
+    }
+
+
+    fun notifyToAll(message: String)
+    {
+        super.sendToAll("noti -m \"$message\"")
     }
 }

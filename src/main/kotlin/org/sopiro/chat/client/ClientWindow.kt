@@ -1,6 +1,5 @@
 package org.sopiro.chat.client
 
-import kotlinx.coroutines.coroutineScope
 import org.sopiro.chat.utils.Parser
 import java.awt.BorderLayout
 import java.awt.Color
@@ -8,10 +7,6 @@ import java.awt.FlowLayout
 import java.awt.Font
 import java.awt.event.WindowAdapter
 import java.awt.event.WindowEvent
-import java.io.BufferedReader
-import java.io.InputStreamReader
-import java.io.PrintWriter
-import java.net.Socket
 import java.util.*
 import javax.swing.*
 import javax.swing.table.DefaultTableModel
@@ -97,29 +92,27 @@ class ClientWindow(title: String) : Client()
 
         if (isServerOnline)
         {
-//            sendMessage("안녕 서버")
+            sendMessage("안녕 서버")
         } else
         {
 
         }
 
-        while (true)
+        while (!readyToGo)
         {
-            if (readyToGo) break
+            Thread.yield()
         }
 
         sendMessage("안녕 난 클라이언트")
     }
 
-    override fun handleData(parser: Parser)
+    override fun onReceiveData(parser: Parser)
     {
         when (parser.cmd)
         {
             "roomInfo" ->
             {
                 readyToGo = true
-                val name = Thread.currentThread().name
-                println("roomInfo got $readyToGo, $name")
             }
 
             "noti" ->

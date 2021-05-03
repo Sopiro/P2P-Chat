@@ -9,40 +9,45 @@ import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.io.PrintWriter
 import java.net.ServerSocket
-import java.net.Socket
 import java.net.SocketException
 
-class Server(private val port: Int, private val logger: Logger)
+open class Server()
 {
     private val scope: CoroutineScope = CoroutineScope(Dispatchers.Default)
     private var serverSocket: ServerSocket? = null
-    private val clients: MutableList<Socket> = ArrayList()
+    private val clients: MutableList<ClientHandle> = ArrayList()
 
-    val numClients: Int
+    private lateinit var logger: Logger
+
+    protected val numClients: Int
         get()
         {
             return clients.size
         }
 
-    init
+    protected fun start(port: Int, logger: Logger)
     {
+        this.logger = logger
+
         try
         {
             serverSocket = ServerSocket(port)
+            logger.log("Server started on port: $port")
+
+            scope.launch {
+                waitClientForever()
+            }
+
         } catch (e: SocketException)
         {
             println(e)
         }
 
-        RoomManager.newRoom("127.0.0.1", 1234, "test", "admin", 10)
-        RoomManager.newRoom("127.0.0.1", 1234, "test", "admin", 10)
-        RoomManager.newRoom("127.0.0.1", 1234, "test", "admin", 10)
+
     }
 
-    fun start()
+    private fun waitClientForever()
     {
-        logger.log("Server started on port: $port")
-
         while (true)
         {
             logger.log("Waiting client's access")
@@ -52,11 +57,12 @@ class Server(private val port: Int, private val logger: Logger)
             {
                 val socket = serverSocket!!.accept()
 
-                clients.add(socket)
-                logger.log("Got one ${socket.localAddress}")
+
+                val reader = BufferedReader(InputStreamReader(socket.getInputStream()))
+                val writer = PrintWriter(socket.getOutputStream())
 
                 scope.launch {
-                    handleClient(socket)
+                    handleClient(ClientHandle(socket, reader, writer))
                 }
 
             } catch (e: SocketException)
@@ -67,12 +73,11 @@ class Server(private val port: Int, private val logger: Logger)
     }
 
     // Handle individual client
-    private fun handleClient(socket: Socket)
+    private fun handleClient(handle: ClientHandle)
     {
-        val reader = BufferedReader(InputStreamReader(socket.getInputStream()))
+        clients.add(handle)
 
-        // Send RoomInfo
-        send(socket, RoomManager.getRoomInfo())
+        onClientEnter(handle)
 
         var message: String?
 
@@ -80,13 +85,13 @@ class Server(private val port: Int, private val logger: Logger)
         {
             try
             {
-                message = reader.readLine()
+                message = handle.reader.readLine()
                 if (message == null) break
 
                 if (message != "")
                 {
                     val parser = Parser(message)
-                    handleData(parser)
+                    onReceiveData(handle, parser)
                 }
             } catch (e: SocketException)
             {
@@ -102,44 +107,38 @@ class Server(private val port: Int, private val logger: Logger)
             }
         }
 
-        logger.log(socket.inetAddress.toString() + " goes out")
-        reader.close()
-        clients.remove(socket)
+        onClientDisconnect(handle)
+
     }
 
-    private fun handleData(parser: Parser)
+    protected open fun onClientEnter(handle: ClientHandle)
     {
-        println(parser.str)
-
-        when (parser.cmd)
-        {
-            "msg" ->
-            {
-                logger.log(parser.getOption("m").toString())
-            }
-        }
     }
 
-    private fun send(socket: Socket, message: String)
+    protected open fun onClientDisconnect(handle: ClientHandle)
     {
-        val writer = PrintWriter(socket.getOutputStream())
-        writer.println(message)
-        writer.flush()
+        handle.release()
+        clients.remove(handle)
     }
 
-    private fun sendToAll(message: String)
+    protected open fun onReceiveData(handle: ClientHandle, parser: Parser)
+    {
+    }
+
+    protected fun send(handle: ClientHandle, message: String)
+    {
+        handle.writer.println(message)
+        handle.writer.flush()
+    }
+
+    protected fun sendToAll(message: String)
     {
         clients.forEach {
             send(it, message)
         }
     }
 
-    fun notifyToAll(message: String)
-    {
-        sendToAll("noti -m \"$message\"")
-    }
-
-    fun terminate()
+    protected fun terminate()
     {
         println("Terminate Server")
 

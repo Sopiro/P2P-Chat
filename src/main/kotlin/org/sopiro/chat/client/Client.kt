@@ -29,7 +29,7 @@ abstract class Client
             socket = Socket(serverIp, port)
 
             scope.launch {
-                handleServer(socket!!)
+                waitServerMessage(socket!!)
             }
 
         } catch (e: ConnectException)
@@ -48,17 +48,8 @@ abstract class Client
         return isServerOnline
     }
 
-    protected fun sendToServer(message: String)
-    {
-        if (isServerOnline)
-        {
-            writer!!.println(message)
-            writer!!.flush()
-        }
-    }
-
-    // Receives message comes from master server
-    private fun handleServer(socket: Socket)
+    // Receives message comes from server
+    private fun waitServerMessage(socket: Socket)
     {
         val reader = BufferedReader(InputStreamReader(socket.getInputStream()))
 
@@ -76,7 +67,7 @@ abstract class Client
                 if (message != "")
                 {
                     val parser = Parser(message)
-                    handleData(parser)
+                    onReceiveData(parser)
                 }
             } catch (e: Exception)
             {
@@ -96,7 +87,16 @@ abstract class Client
         isServerOnline = false
     }
 
-    protected abstract fun handleData(parser: Parser)
+    protected abstract fun onReceiveData(parser: Parser)
+
+    protected fun sendToServer(message: String)
+    {
+        if (isServerOnline)
+        {
+            writer!!.println(message)
+            writer!!.flush()
+        }
+    }
 
     protected fun terminate()
     {
