@@ -35,6 +35,8 @@ class Server(private val port: Int, private val logger: Logger)
         }
 
         RoomManager.newRoom("127.0.0.1", 1234, "test", "admin", 10)
+        RoomManager.newRoom("127.0.0.1", 1234, "test", "admin", 10)
+        RoomManager.newRoom("127.0.0.1", 1234, "test", "admin", 10)
     }
 
     fun start()
@@ -59,16 +61,12 @@ class Server(private val port: Int, private val logger: Logger)
 
             } catch (e: SocketException)
             {
-                when (e.message)
-                {
-                    "socket closed" -> break
-                }
-
                 e.printStackTrace()
             }
         }
     }
 
+    // Handle individual client
     private fun handleClient(socket: Socket)
     {
         val reader = BufferedReader(InputStreamReader(socket.getInputStream()))
@@ -76,13 +74,14 @@ class Server(private val port: Int, private val logger: Logger)
         // Send RoomInfo
         send(socket, RoomManager.getRoomInfo())
 
-        var message: String
+        var message: String?
 
         while (true)
         {
             try
             {
                 message = reader.readLine()
+                if (message == null) break
 
                 if (message != "")
                 {
@@ -95,15 +94,17 @@ class Server(private val port: Int, private val logger: Logger)
                 {
                     "Connection reset" ->
                     {
-                        clients.remove(socket)
-                        logger.log("${socket.inetAddress} goes out")
+                        break
                     }
+
+                    else -> e.printStackTrace()
                 }
-                break
             }
         }
 
+        logger.log(socket.inetAddress.toString() + " goes out")
         reader.close()
+        clients.remove(socket)
     }
 
     private fun handleData(parser: Parser)

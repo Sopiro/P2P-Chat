@@ -10,30 +10,26 @@ import java.io.PrintWriter
 import java.lang.Exception
 import java.net.ConnectException
 import java.net.Socket
-import java.net.SocketException
-import javax.swing.JOptionPane
-import javax.swing.JOptionPane.PLAIN_MESSAGE
 
-class Client(host: String, port: Int)
+abstract class Client
 {
     private val scope: CoroutineScope = CoroutineScope(Dispatchers.Default)
 
     private var socket: Socket? = null
     private var writer: PrintWriter? = null
+    private var reader: BufferedReader? = null
 
-    var readyToGo: Boolean = false
+    protected var isServerOnline: Boolean = false
         private set
 
-    var isServerOnline: Boolean = false
-
-    init
+    protected fun start(serverIp: String, port: Int): Boolean
     {
         try
         {
-            socket = Socket(host, port)
+            socket = Socket(serverIp, port)
 
             scope.launch {
-                onRead(socket!!)
+                handleServer(socket!!)
             }
 
         } catch (e: ConnectException)
@@ -41,35 +37,39 @@ class Client(host: String, port: Int)
             println("Server is currently closed")
         }
 
-        if (socket == null)
+        isServerOnline = socket != null
+
+        if (isServerOnline)
         {
-            isServerOnline = false
-            readyToGo = true
+            writer = PrintWriter(socket!!.getOutputStream())
+            reader = BufferedReader(InputStreamReader(socket!!.getInputStream()))
+        }
+
+        return isServerOnline
+    }
+
+    protected fun sendToServer(message: String)
+    {
+        if (isServerOnline)
+        {
+            writer!!.println(message)
+            writer!!.flush()
         }
     }
 
-    private fun sendToMasterServer(message: String)
-    {
-        writer!!.println(message)
-        writer!!.flush()
-    }
-
-    fun sendMessage(message: String)
-    {
-        sendToMasterServer("msg -m \"$message\"")
-    }
-
-    private fun onRead(socket: Socket)
+    // Receives message comes from master server
+    private fun handleServer(socket: Socket)
     {
         val reader = BufferedReader(InputStreamReader(socket.getInputStream()))
 
-        var message: String
+        var message: String?
 
         while (true)
         {
             try
             {
                 message = reader.readLine()
+                if (message == null) break
 
                 println("Got Message: $message")
 
@@ -85,10 +85,8 @@ class Client(host: String, port: Int)
                     "Connection reset" ->
                     {
                         println("Server closed")
-                        terminate()
+                        break
                     }
-
-                    else -> e.printStackTrace()
                 }
 
                 break
@@ -98,28 +96,16 @@ class Client(host: String, port: Int)
         isServerOnline = false
     }
 
-    private fun handleData(parser: Parser)
-    {
-        when (parser.cmd)
-        {
-            "roomInfo" ->
-            {
-                writer = PrintWriter(socket!!.getOutputStream())
-                isServerOnline = true
-                readyToGo = true
-            }
+    protected abstract fun handleData(parser: Parser)
 
-            "noti" ->
-            {
-                JOptionPane.showMessageDialog(null, parser.getOption("m"), "notification", PLAIN_MESSAGE)
-            }
-        }
-    }
-
-    private fun terminate()
+    protected fun terminate()
     {
         println("Terminate program")
 
-        socket!!.close()
+        if (isServerOnline)
+        {
+            writer!!.close()
+            reader!!.close()
+        }
     }
 }

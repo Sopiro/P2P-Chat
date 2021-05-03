@@ -1,5 +1,9 @@
 package org.sopiro.chat.server
 
+import org.sopiro.chat.utils.Parser
+import java.util.*
+import kotlin.collections.ArrayList
+
 object RoomManager
 {
     private val rooms: MutableList<Room> = ArrayList()
@@ -25,4 +29,9 @@ object RoomManager
     {
         rooms.add(Room(ip, port, roomName, hostName, numMembers))
     }
+
+//    fun interpretInfo(parser: Parser): Vector<Vector<String>>
+//    {
+//
+//    }
 }

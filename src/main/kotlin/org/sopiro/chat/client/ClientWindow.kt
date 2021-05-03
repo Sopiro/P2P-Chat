@@ -1,17 +1,25 @@
 package org.sopiro.chat.client
 
+import kotlinx.coroutines.coroutineScope
+import org.sopiro.chat.utils.Parser
 import java.awt.BorderLayout
 import java.awt.Color
 import java.awt.FlowLayout
 import java.awt.Font
+import java.awt.event.WindowAdapter
+import java.awt.event.WindowEvent
+import java.io.BufferedReader
+import java.io.InputStreamReader
+import java.io.PrintWriter
 import java.net.Socket
 import java.util.*
 import javax.swing.*
 import javax.swing.table.DefaultTableModel
 
 
-class ClientWindow(title: String) : JFrame(title)
+class ClientWindow(title: String) : Client()
 {
+    private val window: JFrame = JFrame(title)
     private var body: JPanel
     private var foot: JPanel
     private var table: JTable
@@ -19,15 +27,15 @@ class ClientWindow(title: String) : JFrame(title)
     private val columnNames = Vector(listOf("방장", "방제", "인원수"))
     private var rowData: Vector<Vector<String>>? = null
 
-    private lateinit var client: Client
+    private var readyToGo: Boolean = false
 
     init
     {
         // JFrame settings
-        isResizable = false
-        defaultCloseOperation = EXIT_ON_CLOSE
+        window.isResizable = false
+        window.defaultCloseOperation = JFrame.EXIT_ON_CLOSE
 
-        (contentPane as JComponent).border = BorderFactory.createEmptyBorder(10, 10, 10, 10)
+        (window.contentPane as JComponent).border = BorderFactory.createEmptyBorder(10, 10, 10, 10)
 
         body = JPanel()
         body.layout = BorderLayout()
@@ -57,39 +65,73 @@ class ClientWindow(title: String) : JFrame(title)
         table.rowHeight = 30
 
         val scrollPane = JScrollPane(table)
-        scrollPane.setBorder(BorderFactory.createMatteBorder(5, 0, 5, 0, Color(0xEEEEEE)))
+        scrollPane.border = BorderFactory.createMatteBorder(5, 0, 5, 0, Color(0xEEEEEE))
 
         body.add(scrollPane)
 
-        add(body, BorderLayout.CENTER)
-        add(foot, BorderLayout.SOUTH)
+        window.add(body, BorderLayout.CENTER)
+        window.add(foot, BorderLayout.SOUTH)
 
-        pack()
+        window.pack()
 
-        setLocationRelativeTo(null)
+        window.setLocationRelativeTo(null)
 
-        isVisible = true
+        window.addWindowListener(object : WindowAdapter()
+        {
+            override fun windowClosing(e: WindowEvent)
+            {
+                terminate()
+                super.windowClosing(e)
+            }
+
+        })
+
+        window.isVisible = true
 
         tryStart("127.0.0.1", 1234)
     }
 
     private fun tryStart(serverIP: String, port: Int)
     {
-        client = Client(serverIP, port)
+        super.start(serverIP, port)
 
-        while (!client.readyToGo)
+        if (isServerOnline)
         {
-            // Block
-        }
-
-        println("isServerOnline: ${client.isServerOnline}")
-
-        if (client.isServerOnline)
-        {
-            client.sendMessage("안녕 난 클라이언트")
+//            sendMessage("안녕 서버")
         } else
         {
 
         }
+
+        while (true)
+        {
+            if (readyToGo) break
+        }
+
+        sendMessage("안녕 난 클라이언트")
     }
+
+    override fun handleData(parser: Parser)
+    {
+        when (parser.cmd)
+        {
+            "roomInfo" ->
+            {
+                readyToGo = true
+                val name = Thread.currentThread().name
+                println("roomInfo got $readyToGo, $name")
+            }
+
+            "noti" ->
+            {
+                JOptionPane.showMessageDialog(null, parser.getOption("m"), "notification", JOptionPane.PLAIN_MESSAGE)
+            }
+        }
+    }
+
+    private fun sendMessage(message: String)
+    {
+        super.sendToServer("msg -m \"$message\"")
+    }
+
 }
