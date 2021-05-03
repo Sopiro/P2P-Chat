@@ -13,6 +13,8 @@ import javax.swing.*
 
 class ServerWindow(title: String) : JFrame(title)
 {
+    private val scope = CoroutineScope(Dispatchers.Default)
+
     private var body: JPanel
     private var foot: JPanel
     private var screen: JTextArea
@@ -48,7 +50,7 @@ class ServerWindow(title: String) : JFrame(title)
         scroller = JScrollPane(screen, 20, 30)
         enterBtn = JButton("Enter")
         enterBtn.addActionListener {
-            execute()
+            interpret()
         }
 
         cmdLine = JTextField(80)
@@ -67,6 +69,17 @@ class ServerWindow(title: String) : JFrame(title)
 
         pack()
 
+        addWindowListener(object : WindowAdapter()
+        {
+            override fun windowClosing(e: WindowEvent)
+            {
+                if (server != null)
+                    server!!.terminate()
+                super.windowClosing(e)
+            }
+
+        })
+
         setLocationRelativeTo(null)
 
         cmdLine.requestFocus()
@@ -74,7 +87,7 @@ class ServerWindow(title: String) : JFrame(title)
         isVisible = true
     }
 
-    private fun execute()
+    private fun interpret()
     {
         val rawText = cmdLine.text
         val parser = Parser(rawText)
@@ -110,7 +123,11 @@ class ServerWindow(title: String) : JFrame(title)
 
             "noti" ->
             {
-                server!!.notifyToAll(parser.getOption("m").toString());
+                if (parser.getOption("m") == null) return
+
+                val msg = parser.getOption("m").toString()
+                server!!.notifyToAll(msg);
+                logger.log("Notified to all clients: $msg")
             }
 
             "exit" ->
@@ -119,7 +136,7 @@ class ServerWindow(title: String) : JFrame(title)
                 dispose()
             }
 
-            else -> logger.log("$rawText")
+            else -> logger.log(rawText)
         }
 
         cmdLine.text = ""
@@ -131,17 +148,7 @@ class ServerWindow(title: String) : JFrame(title)
         {
             server = Server(port, logger)
 
-            addWindowListener(object : WindowAdapter()
-            {
-                override fun windowClosing(e: WindowEvent)
-                {
-                    server!!.terminate()
-                    super.windowClosing(e)
-                }
-
-            })
-
-            CoroutineScope(Dispatchers.Default).launch {
+            scope.launch {
                 server!!.start()
             }
         } else

@@ -33,6 +33,7 @@ class Server(private val port: Int, private val logger: Logger)
         {
             println(e)
         }
+
         RoomManager.newRoom("127.0.0.1", 1234, "test", "admin", 10)
     }
 
@@ -58,8 +59,12 @@ class Server(private val port: Int, private val logger: Logger)
 
             } catch (e: SocketException)
             {
+                when (e.message)
+                {
+                    "socket closed" -> break
+                }
+
                 e.printStackTrace()
-                break
             }
         }
     }
@@ -103,6 +108,8 @@ class Server(private val port: Int, private val logger: Logger)
 
     private fun handleData(parser: Parser)
     {
+        println(parser.str)
+
         when (parser.cmd)
         {
             "msg" ->
@@ -136,8 +143,5 @@ class Server(private val port: Int, private val logger: Logger)
         println("Terminate Server")
 
         serverSocket!!.close()
-        clients.forEach {
-            it.close()
-        }
     }
 }
