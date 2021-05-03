@@ -83,13 +83,11 @@ class ClientWindow(title: String) : Client()
 
         window.isVisible = true
 
-        tryStart("127.0.0.1", 1234)
+        super.start("127.0.0.1", 1234)
     }
 
-    private fun tryStart(serverIP: String, port: Int)
+    override fun onConnect(isServerOnline: Boolean)
     {
-        super.start(serverIP, port)
-
         if (isServerOnline)
         {
             sendMessage("안녕 서버")
@@ -108,6 +106,8 @@ class ClientWindow(title: String) : Client()
 
     override fun onReceiveData(parser: Parser)
     {
+        println("Got Message: ${parser.str}")
+
         when (parser.cmd)
         {
             "roomInfo" ->
@@ -120,6 +120,13 @@ class ClientWindow(title: String) : Client()
                 JOptionPane.showMessageDialog(null, parser.getOption("m"), "notification", JOptionPane.PLAIN_MESSAGE)
             }
         }
+    }
+
+    override fun onServerClosed()
+    {
+        super.onServerClosed()
+
+        println("Server closed")
     }
 
     private fun sendMessage(message: String)

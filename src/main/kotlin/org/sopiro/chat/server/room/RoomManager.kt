@@ -1,8 +1,4 @@
-package org.sopiro.chat.server
-
-import org.sopiro.chat.utils.Parser
-import java.util.*
-import kotlin.collections.ArrayList
+package org.sopiro.chat.server.room
 
 object RoomManager
 {

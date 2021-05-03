@@ -19,10 +19,9 @@ abstract class Client
     private var writer: PrintWriter? = null
     private var reader: BufferedReader? = null
 
-    protected var isServerOnline: Boolean = false
-        private set
+    private var isServerOnline: Boolean = false
 
-    protected fun start(serverIp: String, port: Int): Boolean
+    protected fun start(serverIp: String, port: Int)
     {
         try
         {
@@ -45,7 +44,7 @@ abstract class Client
             reader = BufferedReader(InputStreamReader(socket!!.getInputStream()))
         }
 
-        return isServerOnline
+        onConnect(isServerOnline)
     }
 
     // Receives message comes from server
@@ -62,8 +61,6 @@ abstract class Client
                 message = reader.readLine()
                 if (message == null) break
 
-                println("Got Message: $message")
-
                 if (message != "")
                 {
                     val parser = Parser(message)
@@ -71,23 +68,36 @@ abstract class Client
                 }
             } catch (e: Exception)
             {
-                when (e.message)
+                when (e.message!!.toLowerCase())
                 {
-                    "Connection reset" ->
+                    "connection reset" ->
                     {
-                        println("Server closed")
+                        System.err.println("connection reset")
+                        isServerOnline = false
+                        onServerClosed()
                         break
                     }
-                }
 
-                break
+                    "socket closed" ->
+                    {
+                        System.err.println("socket closed")
+                        break
+                    }
+
+                    else -> e.printStackTrace()
+                }
             }
         }
-
-        isServerOnline = false
     }
 
+    protected abstract fun onConnect(isServerOnline: Boolean)
+
     protected abstract fun onReceiveData(parser: Parser)
+
+    protected open fun onServerClosed()
+    {
+        socket!!.close()
+    }
 
     protected fun sendToServer(message: String)
     {
@@ -100,12 +110,9 @@ abstract class Client
 
     protected fun terminate()
     {
-        println("Terminate program")
+        println("Terminate Client Program")
 
-        if (isServerOnline)
-        {
-            writer!!.close()
-            reader!!.close()
-        }
+        if (socket != null)
+            socket!!.close()
     }
 }

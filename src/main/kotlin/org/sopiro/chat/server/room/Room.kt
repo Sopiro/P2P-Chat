@@ -1,4 +1,4 @@
-package org.sopiro.chat.server
+package org.sopiro.chat.server.room
 
 data class Room(
     val ip: String,

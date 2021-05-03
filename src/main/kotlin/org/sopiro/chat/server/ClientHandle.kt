@@ -12,7 +12,7 @@ data class ClientHandle(
 {
     fun release()
     {
-        reader.close()
-        writer.close()
+        socket.close()
+        //reader and writer will be closed along with the socket closing
     }
 }

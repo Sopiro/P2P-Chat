@@ -1,5 +1,6 @@
 package org.sopiro.chat.server
 
+import org.sopiro.chat.server.room.RoomManager
 import org.sopiro.chat.utils.Logger
 import org.sopiro.chat.utils.Parser
 import java.awt.BorderLayout
@@ -21,8 +22,6 @@ class ServerWindow(title: String) : Server()
     private var logger: Logger
 
     private val defaultMsg = "start -p 1234"
-
-    private var isStarted: Boolean = false
 
     init
     {
@@ -97,7 +96,10 @@ class ServerWindow(title: String) : Server()
                 try
                 {
                     val port = Integer.parseInt(parser.getOption("p"))
-                    tryStartServer(port)
+                    if (!super.start(port))
+                    {
+                        logger.log("Server is already Online")
+                    }
                 } catch (e: NumberFormatException)
                 {
                     logger.log("Sets port with -p option correctly")
@@ -140,14 +142,23 @@ class ServerWindow(title: String) : Server()
         cmdLine.text = ""
     }
 
-    override fun onClientEnter(handle: ClientHandle)
+    override fun onStartServer(port: Int)
+    {
+        logger.log("Server started on port: $port")
+    }
+
+    override fun onWaitClientAccess()
+    {
+        logger.log("Waiting client's access")
+    }
+
+    override fun onClientConnect(handle: ClientHandle)
     {
         logger.log("Got one ${handle.socket.localAddress}")
 
         // Send room info
         send(handle, RoomManager.getRoomInfo())
     }
-
 
     override fun onReceiveData(handle: ClientHandle, parser: Parser)
     {
@@ -168,19 +179,6 @@ class ServerWindow(title: String) : Server()
 
         super.onClientDisconnect(handle)
     }
-
-    private fun tryStartServer(port: Int)
-    {
-        if (isStarted)
-        {
-            logger.log("Server is already online")
-            return
-        }
-
-        isStarted = true
-        super.start(port, logger)
-    }
-
 
     fun notifyToAll(message: String)
     {

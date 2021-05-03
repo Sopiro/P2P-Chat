@@ -11,13 +11,12 @@ import java.io.PrintWriter
 import java.net.ServerSocket
 import java.net.SocketException
 
-open class Server()
+abstract class Server()
 {
     private val scope: CoroutineScope = CoroutineScope(Dispatchers.Default)
+
     private var serverSocket: ServerSocket? = null
     private val clients: MutableList<ClientHandle> = ArrayList()
-
-    private lateinit var logger: Logger
 
     protected val numClients: Int
         get()
@@ -25,14 +24,18 @@ open class Server()
             return clients.size
         }
 
-    protected fun start(port: Int, logger: Logger)
+    private var isStarted: Boolean = false
+
+    protected fun start(port: Int): Boolean
     {
-        this.logger = logger
+        if (isStarted) return false
+        isStarted = true
 
         try
         {
             serverSocket = ServerSocket(port)
-            logger.log("Server started on port: $port")
+
+            onStartServer(port)
 
             scope.launch {
                 waitClientForever()
@@ -43,21 +46,19 @@ open class Server()
             println(e)
         }
 
-
+        return isStarted
     }
 
     private fun waitClientForever()
     {
         while (true)
         {
-            logger.log("Waiting client's access")
+            onWaitClientAccess()
             Thread.sleep(10)
 
             try
             {
                 val socket = serverSocket!!.accept()
-
-
                 val reader = BufferedReader(InputStreamReader(socket.getInputStream()))
                 val writer = PrintWriter(socket.getOutputStream())
 
@@ -67,6 +68,21 @@ open class Server()
 
             } catch (e: SocketException)
             {
+                when (e.message!!.toLowerCase())
+                {
+                    "socket is closed" ->
+                    {
+                        System.err.println("socket is closed")
+                        break
+                    }
+
+                    "socket closed" ->
+                    {
+                        System.err.println("socket closed")
+                        break
+                    }
+                }
+
                 e.printStackTrace()
             }
         }
@@ -77,7 +93,7 @@ open class Server()
     {
         clients.add(handle)
 
-        onClientEnter(handle)
+        onClientConnect(handle)
 
         var message: String?
 
@@ -95,10 +111,11 @@ open class Server()
                 }
             } catch (e: SocketException)
             {
-                when (e.message)
+                when (e.message!!.toLowerCase())
                 {
-                    "Connection reset" ->
+                    "connection reset" ->
                     {
+                        System.err.println("connection reset")
                         break
                     }
 
@@ -108,21 +125,20 @@ open class Server()
         }
 
         onClientDisconnect(handle)
-
     }
 
-    protected open fun onClientEnter(handle: ClientHandle)
-    {
-    }
+    protected abstract fun onWaitClientAccess()
+
+    protected abstract fun onStartServer(port: Int)
+
+    protected abstract fun onClientConnect(handle: ClientHandle)
+
+    protected abstract fun onReceiveData(handle: ClientHandle, parser: Parser)
 
     protected open fun onClientDisconnect(handle: ClientHandle)
     {
         handle.release()
         clients.remove(handle)
-    }
-
-    protected open fun onReceiveData(handle: ClientHandle, parser: Parser)
-    {
     }
 
     protected fun send(handle: ClientHandle, message: String)
@@ -140,8 +156,9 @@ open class Server()
 
     protected fun terminate()
     {
-        println("Terminate Server")
+        println("Terminate Server Program")
 
-        serverSocket!!.close()
+        if (serverSocket != null)
+            serverSocket!!.close()
     }
 }
