@@ -90,9 +90,9 @@ class ServerWindow(title: String) : Server()
 
     private fun init()
     {
-        RoomManager.newRoom("127.0.0.1", 1234, "테스트 방", "나다1", 10)
-        RoomManager.newRoom("127.0.0.1", 1234, "테스트 방", "나다2", 10)
-        RoomManager.newRoom("127.0.0.1", 1234, "테스트 방", "나다3", 10)
+        RoomManager.newRoom("127.0.0.1", 1234, "테스트 방1", "나다1", 10)
+        RoomManager.newRoom("127.0.0.1", 1234, "테스트 방2", "나다2", 10)
+        RoomManager.newRoom("127.0.0.1", 1234, "테스트 방3", "나다3", 10)
     }
 
     private fun interpret()
@@ -168,19 +168,42 @@ class ServerWindow(title: String) : Server()
         logger.log("Got one ${handle.socket.localAddress}")
 
         // Send room info
-        send(handle, RoomManager.getRoomInfo())
+        sendRoomInfo(handle)
     }
 
     override fun onReceiveData(handle: ClientHandle, parser: Parser)
     {
-        println(parser.str)
-
         when (parser.cmd)
         {
             "msg" ->
             {
                 logger.log(parser.getOption("m").toString())
             }
+
+            "newRoom" ->
+            {
+                val ip = handle.socket.inetAddress.hostAddress
+                val port = Integer.parseInt(parser.getOption("p"))
+                val rn = parser.getOption("rn")
+                val hn = parser.getOption("hn")
+
+                println(parser.options)
+
+                RoomManager.newRoom(ip, port, rn!!, hn!!, 1)
+
+                sendRoomInfo(handle)
+
+                logger.log("${handle.socket.localAddress} requests new room")
+                logger.logNoTime("RoomName: $rn")
+                logger.logNoTime("HostName: $hn")
+            }
+
+            "refresh" ->
+            {
+                sendRoomInfo(handle)
+            }
+
+            else -> logger.log(parser.str)
         }
     }
 
@@ -194,5 +217,10 @@ class ServerWindow(title: String) : Server()
     private fun notifyToAll(message: String)
     {
         super.sendToAll("noti -m \"$message\"")
+    }
+
+    private fun sendRoomInfo(handle: ClientHandle)
+    {
+        send(handle, RoomManager.getRoomInfo())
     }
 }

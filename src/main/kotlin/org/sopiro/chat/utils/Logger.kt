@@ -12,4 +12,12 @@ class Logger(private val textArea: JTextArea?)
         if (alsoToTextArea && textArea != null) textArea.append(content)
         print(content)
     }
+
+    fun logNoTime(msg: String, alsoToTextArea: Boolean = true)
+    {
+        val content = "$msg\n"
+
+        if (alsoToTextArea && textArea != null) textArea.append(content)
+        print(content)
+    }
 }

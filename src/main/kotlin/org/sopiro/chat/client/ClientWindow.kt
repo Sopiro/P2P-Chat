@@ -1,5 +1,6 @@
 package org.sopiro.chat.client
 
+import org.sopiro.chat.server.NewRoomDialog
 import org.sopiro.chat.server.room.Room
 import org.sopiro.chat.server.room.RoomManager
 import org.sopiro.chat.utils.Parser
@@ -9,6 +10,7 @@ import java.awt.FlowLayout
 import java.awt.Font
 import java.awt.event.WindowAdapter
 import java.awt.event.WindowEvent
+import java.net.InetAddress
 import java.util.*
 import javax.swing.*
 import javax.swing.table.DefaultTableModel
@@ -20,12 +22,19 @@ class ClientWindow(title: String) : Client()
     private var body: JPanel
     private var foot: JPanel
     private var table: JTable
+    private var btnNewRoom: JButton
+    private var btnEnterRoom: JButton
+    private var btnRefresh: JButton
 
     private val columnNames = Vector(listOf("방장", "방제", "인원수"))
     private val font = Font("serif", Font.PLAIN, 16)
 
     private lateinit var roomData: List<Room>
-        private set
+
+    private val serverIP = "172.18.48.1"
+    private val serverPort = 1234
+
+    private val myPort = 12345
 
     private var readyToGo: Boolean = false
 
@@ -61,13 +70,41 @@ class ClientWindow(title: String) : Client()
 //        }
 
         table = JTable()
+//        table.selectedRow
+//        table.selectionModel =
+
+        table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION)
 
 //        reloadRoom()
 
         val scrollPane = JScrollPane(table)
         scrollPane.border = BorderFactory.createMatteBorder(5, 0, 5, 0, Color(0xEEEEEE))
 
+        btnNewRoom = JButton("방만들기")
+        btnNewRoom.addActionListener {
+            NewRoomDialog(window, "방 만들기", true) { name: String, roomName: String ->
+                if (name.length + roomName.length < 2)
+                {
+                    alert("똑바로 입력해")
+                } else
+                {
+                    newRoom(myPort, name, roomName)
+                }
+            }
+        }
+        btnEnterRoom = JButton("접속")
+        btnEnterRoom.addActionListener {
+//            onReceiveData(Parser("enter -id "))
+        }
+
+        btnRefresh = JButton("새로고침")
+        btnRefresh.addActionListener {
+            requestRefresh()
+        }
+
         body.add(scrollPane)
+        foot.add(btnNewRoom)
+        foot.add(btnEnterRoom)
 
         window.add(body, BorderLayout.CENTER)
         window.add(foot, BorderLayout.SOUTH)
@@ -88,7 +125,7 @@ class ClientWindow(title: String) : Client()
 
         window.isVisible = true
 
-        super.start("127.0.0.1", 1234)
+        super.start(serverIP, serverPort)
     }
 
     override fun onConnect(isServerOnline: Boolean)
@@ -170,6 +207,16 @@ class ClientWindow(title: String) : Client()
     private fun sendMessage(message: String)
     {
         super.sendToServer("msg -m \"$message\"")
+    }
+
+    private fun newRoom(port: Int, name: String, roomName: String)
+    {
+        super.sendToServer("newRoom -p \"$port\" -hn \"$name\" -rn \"$roomName\"")
+    }
+
+    private fun requestRefresh()
+    {
+        super.sendToServer("refresh")
     }
 
     private fun alert(message: Any?)
