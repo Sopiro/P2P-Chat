@@ -7,6 +7,10 @@ class Parser(val str: String)
         private set
 
     lateinit var options: HashMap<String, String>
+        private set
+
+    lateinit var tokens: List<String>
+        private set
 
     init
     {
@@ -21,14 +25,14 @@ class Parser(val str: String)
 
     private fun parseData(str: String)
     {
-        val tokens = str.split("|")
+        tokens = str.split("|")
 
         cmd = tokens[0]
     }
 
     private fun parseCommand(str: String)
     {
-        val tokens = str.split(" ")
+        tokens = str.split(" ")
 
         cmd = tokens[0]
         options = HashMap()

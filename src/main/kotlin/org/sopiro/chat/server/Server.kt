@@ -3,7 +3,6 @@ package org.sopiro.chat.server
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import org.sopiro.chat.utils.Logger
 import org.sopiro.chat.utils.Parser
 import java.io.BufferedReader
 import java.io.InputStreamReader
@@ -154,7 +153,7 @@ abstract class Server()
         }
     }
 
-    protected fun terminate()
+    protected open fun terminate()
     {
         println("Terminate Server Program")
 

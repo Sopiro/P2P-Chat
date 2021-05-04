@@ -1,5 +1,7 @@
 package org.sopiro.chat.client
 
+import org.sopiro.chat.server.room.Room
+import org.sopiro.chat.server.room.RoomManager
 import org.sopiro.chat.utils.Parser
 import java.awt.BorderLayout
 import java.awt.Color
@@ -20,7 +22,10 @@ class ClientWindow(title: String) : Client()
     private var table: JTable
 
     private val columnNames = Vector(listOf("방장", "방제", "인원수"))
-    private var rowData: Vector<Vector<String>>? = null
+    private val font = Font("serif", Font.PLAIN, 16)
+
+    private lateinit var roomData: List<Room>
+        private set
 
     private var readyToGo: Boolean = false
 
@@ -38,26 +43,26 @@ class ClientWindow(title: String) : Client()
         foot = JPanel()
         foot.layout = FlowLayout(FlowLayout.RIGHT)
 
-        rowData = Vector<Vector<String>>()
+//        val rowData = Vector<Vector<String>>()
+//
+//        val ele = Vector<String>()
+//        ele.add("로")
+//        ele.add("딩")
+//        ele.add("중")
+//
+//        rowData.addElement(ele)
 
-        val ele = Vector<String>()
-        ele.add("a")
-        ele.add("b")
-        ele.add("c")
+//        val dtm: DefaultTableModel = object : DefaultTableModel()
+//        {
+//            override fun isCellEditable(row: Int, column: Int): Boolean
+//            {
+//                return false
+//            }
+//        }
 
-        rowData!!.addElement(ele)
+        table = JTable()
 
-        val dtm: DefaultTableModel = object : DefaultTableModel(rowData, columnNames)
-        {
-            override fun isCellEditable(row: Int, column: Int): Boolean
-            {
-                return false
-            }
-        }
-
-        table = JTable(dtm)
-        table.font = Font("맑은고딕", Font.PLAIN, 30)
-        table.rowHeight = 30
+//        reloadRoom()
 
         val scrollPane = JScrollPane(table)
         scrollPane.border = BorderFactory.createMatteBorder(5, 0, 5, 0, Color(0xEEEEEE))
@@ -93,7 +98,7 @@ class ClientWindow(title: String) : Client()
             sendMessage("안녕 서버")
         } else
         {
-            // TODO
+            alert("Server is currently closed")
         }
 
         while (!readyToGo)
@@ -106,18 +111,21 @@ class ClientWindow(title: String) : Client()
 
     override fun onReceiveData(parser: Parser)
     {
-        println("Got Message: ${parser.str}")
+//        println("Got Message: ${parser.str}")
 
         when (parser.cmd)
         {
             "roomInfo" ->
             {
                 readyToGo = true
+
+                roomData = RoomManager.interpretInfo(parser)!!
+                reloadRoom()
             }
 
             "noti" ->
             {
-                JOptionPane.showMessageDialog(window, parser.getOption("m"), "notification", JOptionPane.PLAIN_MESSAGE)
+                alert(parser.getOption("m"))
             }
         }
     }
@@ -125,11 +133,48 @@ class ClientWindow(title: String) : Client()
     override fun onServerClosed()
     {
         println("Server closed")
+        alert("Server closed")
+    }
+
+    private fun reloadRoom()
+    {
+        val rowData = Vector<Vector<String>>()
+
+        for (i in roomData.indices)
+        {
+            val row = Vector<String>()
+
+            row.add(roomData[i].hostName)
+            row.add(roomData[i].roomName)
+            row.add(roomData[i].numMembers.toString())
+
+            rowData.add(row)
+        }
+
+        val dtm: DefaultTableModel = object : DefaultTableModel(rowData, columnNames)
+        {
+            override fun isCellEditable(row: Int, column: Int): Boolean
+            {
+                return false
+            }
+        }
+
+        table.model = dtm
+        table.rowHeight = 30
+        table.font = font
+
+        table.updateUI()
+        table.columnModel.getColumn(1).minWidth = 230
     }
 
     private fun sendMessage(message: String)
     {
         super.sendToServer("msg -m \"$message\"")
+    }
+
+    private fun alert(message: Any?)
+    {
+        JOptionPane.showMessageDialog(window, message, "notification", JOptionPane.PLAIN_MESSAGE)
     }
 
 }

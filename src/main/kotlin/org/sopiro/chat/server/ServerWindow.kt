@@ -8,6 +8,8 @@ import java.awt.FlowLayout
 import java.awt.event.WindowAdapter
 import java.awt.event.WindowEvent
 import javax.swing.*
+import javax.swing.text.DefaultCaret
+
 
 class ServerWindow(title: String) : Server()
 {
@@ -43,7 +45,9 @@ class ServerWindow(title: String) : Server()
 
         screen.lineWrap = true
         screen.isEditable = false
+        (screen.caret as DefaultCaret).updatePolicy = DefaultCaret.ALWAYS_UPDATE
         scroller = JScrollPane(screen, 20, 30)
+
         enterBtn = JButton("Enter")
         enterBtn.addActionListener {
             interpret()
@@ -81,7 +85,14 @@ class ServerWindow(title: String) : Server()
 
         window.isVisible = true
 
-        RoomManager.newRoom("127.0.0.1", 1234, "테스트 방", "나다", 10)
+        init()
+    }
+
+    private fun init()
+    {
+        RoomManager.newRoom("127.0.0.1", 1234, "테스트 방", "나다1", 10)
+        RoomManager.newRoom("127.0.0.1", 1234, "테스트 방", "나다2", 10)
+        RoomManager.newRoom("127.0.0.1", 1234, "테스트 방", "나다3", 10)
     }
 
     private fun interpret()
@@ -113,7 +124,7 @@ class ServerWindow(title: String) : Server()
 
             "ls" ->
             {
-                logger.log("$numClients Clients are existing")
+                logger.log("$numClients Clients are existing, ${RoomManager.howMany()} Rooms exist")
             }
 
             "cls" ->
@@ -126,7 +137,7 @@ class ServerWindow(title: String) : Server()
                 if (parser.getOption("m") == null) return
 
                 val msg = parser.getOption("m").toString()
-                notifyToAll(msg);
+                notifyToAll(msg)
                 logger.log("Notified to all clients: $msg")
             }
 
@@ -180,7 +191,7 @@ class ServerWindow(title: String) : Server()
         super.onClientDisconnect(handle)
     }
 
-    fun notifyToAll(message: String)
+    private fun notifyToAll(message: String)
     {
         super.sendToAll("noti -m \"$message\"")
     }
