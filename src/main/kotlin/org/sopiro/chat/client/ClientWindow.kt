@@ -93,7 +93,7 @@ class ClientWindow(title: String) : Client()
             sendMessage("안녕 서버")
         } else
         {
-
+            // TODO
         }
 
         while (!readyToGo)
@@ -117,15 +117,13 @@ class ClientWindow(title: String) : Client()
 
             "noti" ->
             {
-                JOptionPane.showMessageDialog(null, parser.getOption("m"), "notification", JOptionPane.PLAIN_MESSAGE)
+                JOptionPane.showMessageDialog(window, parser.getOption("m"), "notification", JOptionPane.PLAIN_MESSAGE)
             }
         }
     }
 
     override fun onServerClosed()
     {
-        super.onServerClosed()
-
         println("Server closed")
     }
 

@@ -94,17 +94,19 @@ abstract class Client
 
     protected abstract fun onReceiveData(parser: Parser)
 
-    protected open fun onServerClosed()
-    {
-        socket!!.close()
-    }
+    protected abstract fun onServerClosed()
 
-    protected fun sendToServer(message: String)
+    protected fun sendToServer(message: String): Boolean
     {
-        if (isServerOnline)
+        return if (isServerOnline)
         {
             writer!!.println(message)
             writer!!.flush()
+
+            true
+        } else
+        {
+            false
         }
     }
 
