@@ -43,6 +43,7 @@ abstract class Server()
         } catch (e: SocketException)
         {
             println(e)
+            isStarted = false
         }
 
         return isStarted

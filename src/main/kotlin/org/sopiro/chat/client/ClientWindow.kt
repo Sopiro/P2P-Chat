@@ -10,17 +10,17 @@ import java.awt.FlowLayout
 import java.awt.Font
 import java.awt.event.WindowAdapter
 import java.awt.event.WindowEvent
-import java.net.InetAddress
 import java.util.*
 import javax.swing.*
 import javax.swing.table.DefaultTableModel
 
-
 class ClientWindow(title: String) : Client()
 {
     private val window: JFrame = JFrame(title)
-    private var body: JPanel
-    private var foot: JPanel
+    private lateinit var chatWindow: ChatWindow
+
+    private var jpnBody: JPanel
+    private var jpnFoot: JPanel
     private var table: JTable
     private var btnNewRoom: JButton
     private var btnEnterRoom: JButton
@@ -46,36 +46,14 @@ class ClientWindow(title: String) : Client()
 
         (window.contentPane as JComponent).border = BorderFactory.createEmptyBorder(10, 10, 10, 10)
 
-        body = JPanel()
-        body.layout = BorderLayout()
+        jpnBody = JPanel()
+        jpnBody.layout = BorderLayout()
 
-        foot = JPanel()
-        foot.layout = FlowLayout(FlowLayout.RIGHT)
-
-//        val rowData = Vector<Vector<String>>()
-//
-//        val ele = Vector<String>()
-//        ele.add("로")
-//        ele.add("딩")
-//        ele.add("중")
-//
-//        rowData.addElement(ele)
-
-//        val dtm: DefaultTableModel = object : DefaultTableModel()
-//        {
-//            override fun isCellEditable(row: Int, column: Int): Boolean
-//            {
-//                return false
-//            }
-//        }
+        jpnFoot = JPanel()
+        jpnFoot.layout = FlowLayout(FlowLayout.RIGHT)
 
         table = JTable()
-//        table.selectedRow
-//        table.selectionModel =
-
         table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION)
-
-//        reloadRoom()
 
         val scrollPane = JScrollPane(table)
         scrollPane.border = BorderFactory.createMatteBorder(5, 0, 5, 0, Color(0xEEEEEE))
@@ -102,12 +80,12 @@ class ClientWindow(title: String) : Client()
             requestRefresh()
         }
 
-        body.add(scrollPane)
-        foot.add(btnNewRoom)
-        foot.add(btnEnterRoom)
+        jpnBody.add(scrollPane)
+        jpnFoot.add(btnNewRoom)
+        jpnFoot.add(btnEnterRoom)
 
-        window.add(body, BorderLayout.CENTER)
-        window.add(foot, BorderLayout.SOUTH)
+        window.add(jpnBody, BorderLayout.CENTER)
+        window.add(jpnFoot, BorderLayout.SOUTH)
 
         window.pack()
 
@@ -120,7 +98,6 @@ class ClientWindow(title: String) : Client()
                 terminate()
                 super.windowClosing(e)
             }
-
         })
 
         window.isVisible = true
@@ -211,6 +188,11 @@ class ClientWindow(title: String) : Client()
 
     private fun newRoom(port: Int, name: String, roomName: String)
     {
+        window.isVisible = false
+        chatWindow = ChatWindow(roomName) {
+            window.isVisible = true
+        }
+        chatWindow.show()
         super.sendToServer("newRoom -p \"$port\" -hn \"$name\" -rn \"$roomName\"")
     }
 

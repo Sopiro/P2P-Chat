@@ -23,8 +23,8 @@ class NewRoomDialog(window: JFrame, title: String, modal: Boolean, callBack: (na
         val okBtn = JButton("확인")
 
         okBtn.addActionListener {
-            callBack(jtfName.text, jtfRoomName.text)
             dispose()
+            callBack(jtfName.text, jtfRoomName.text)
         }
 
         body.add(lblName)

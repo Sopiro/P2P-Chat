@@ -48,7 +48,7 @@ class ServerWindow(title: String) : Server()
         (screen.caret as DefaultCaret).updatePolicy = DefaultCaret.ALWAYS_UPDATE
         scroller = JScrollPane(screen, 20, 30)
 
-        enterBtn = JButton("Enter")
+        enterBtn = JButton("입력")
         enterBtn.addActionListener {
             interpret()
         }
@@ -76,7 +76,6 @@ class ServerWindow(title: String) : Server()
                 super.windowClosing(e)
                 terminate()
             }
-
         })
 
         window.setLocationRelativeTo(null)
@@ -90,9 +89,9 @@ class ServerWindow(title: String) : Server()
 
     private fun init()
     {
-        RoomManager.newRoom("127.0.0.1", 1234, "테스트 방1", "나다1", 10)
-        RoomManager.newRoom("127.0.0.1", 1234, "테스트 방2", "나다2", 10)
-        RoomManager.newRoom("127.0.0.1", 1234, "테스트 방3", "나다3", 10)
+//        RoomManager.newRoom("127.0.0.1", 1234, "테스트 방1", "나다1", 10)
+//        RoomManager.newRoom("127.0.0.1", 1234, "테스트 방2", "나다2", 10)
+//        RoomManager.newRoom("127.0.0.1", 1234, "테스트 방3", "나다3", 10)
     }
 
     private fun interpret()
@@ -201,6 +200,7 @@ class ServerWindow(title: String) : Server()
             "refresh" ->
             {
                 sendRoomInfo(handle)
+                logger.log("${handle.socket.localAddress} requests refresh")
             }
 
             else -> logger.log(parser.str)
