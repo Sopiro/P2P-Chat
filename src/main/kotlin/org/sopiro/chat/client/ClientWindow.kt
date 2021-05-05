@@ -36,9 +36,7 @@ class ClientWindow(title: String) : Client()
     private val serverIP = "172.18.48.1"
     private val serverPort = 1234
 
-    private val myPort = 5678
-
-    private var readyToGo: Boolean = false
+    private var myPort = 5678
 
     private var isServerOnline: Boolean = false
 
@@ -139,8 +137,6 @@ class ClientWindow(title: String) : Client()
         {
             "roomInfo" ->
             {
-                readyToGo = true
-
                 roomData = RoomManager.interpretInfo(parser)!!
                 reloadRoom()
             }
@@ -201,17 +197,20 @@ class ClientWindow(title: String) : Client()
             roomName, name,
             {
                 window.isVisible = true
-                super.sendToServer("deleteRoom")
+                super.sendToServer("deleteRoom -p \"$it\"")
             },
             {
-                super.sendToServer("rmPlus")
+                super.sendToServer("rmPlus -p \"$it\"")
             },
             {
-                super.sendToServer("rmMinus")
+                super.sendToServer("rmMinus -p \"$it\"")
+            },
+            {
+                super.sendToServer("newRoom -p \"$it\" -hn \"$name\" -rn \"$roomName\"")
             }
+
         )
         chatServerWindow.launch(port)
-        super.sendToServer("newRoom -p \"$port\" -hn \"$name\" -rn \"$roomName\"")
     }
 
     private fun enterTheRoom(myName: String)

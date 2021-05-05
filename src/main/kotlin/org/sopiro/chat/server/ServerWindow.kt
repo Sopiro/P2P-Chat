@@ -133,7 +133,7 @@ class ServerWindow(title: String) : Server()
                 }
             }
 
-            "cls" ->
+            "cls", "clear" ->
             {
                 screen.text = ""
             }
@@ -147,15 +147,31 @@ class ServerWindow(title: String) : Server()
                 logger.log("Notified to all clients: $msg")
             }
 
+            "help" ->
+            {
+                logger.log("help")
+                logger.logNoTime("-------------------------------------------------")
+                logger.logNoTime("[start] -> Start a server program")
+                logger.logNoTime("    usage: start -p \"port\"")
+                logger.logNoTime("[ls] -> Show user, room status")
+                logger.logNoTime("    usage: ls")
+                logger.logNoTime("[rl] -> Show room list")
+                logger.logNoTime("    usage: rl")
+                logger.logNoTime("[cls, clear] -> Clear screen")
+                logger.logNoTime("    usage: cls, clear")
+                logger.logNoTime("[noti] -> Notify a message to all clients")
+                logger.logNoTime("    usage: noti -m \"message\"")
+                logger.logNoTime("[help] -> Show this")
+                logger.logNoTime("    usage: help")
+                logger.logNoTime("[exit] -> End server program")
+                logger.logNoTime("    usage: exit")
+                logger.logNoTime("-------------------------------------------------")
+            }
+
             "exit" ->
             {
                 terminate()
                 window.dispatchEvent(WindowEvent(window, WindowEvent.WINDOW_CLOSING))
-            }
-
-            "test" ->
-            {
-                clients[0].socket.close()
             }
 
             else -> logger.log(rawText)
@@ -210,8 +226,9 @@ class ServerWindow(title: String) : Server()
             "deleteRoom" ->
             {
                 val ip = handle.ip
+                val port = Integer.parseInt(parser.getOption("p"))
 
-                RoomManager.deleteRoom(ip)
+                RoomManager.deleteRoom(ip, port)
 
                 sendRoomInfoToAll()
                 logger.log("$ip deletes room")
@@ -220,16 +237,18 @@ class ServerWindow(title: String) : Server()
             "rmPlus" ->
             {
                 val ip = handle.ip
+                val port = Integer.parseInt(parser.getOption("p"))
 
-                RoomManager.someoneEnter(ip)
+                RoomManager.someoneEnter(ip, port)
                 sendRoomInfoToAll()
             }
 
             "rmMinus" ->
             {
                 val ip = handle.ip
+                val port = Integer.parseInt(parser.getOption("p"))
 
-                RoomManager.someoneExit(ip)
+                RoomManager.someoneExit(ip, port)
                 sendRoomInfoToAll()
             }
 

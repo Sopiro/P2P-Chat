@@ -15,7 +15,7 @@ abstract class Client
 {
     private val scope: CoroutineScope = CoroutineScope(Dispatchers.Default)
 
-    protected var socket: Socket? = null
+    private var socket: Socket? = null
     private var writer: PrintWriter? = null
     private var reader: BufferedReader? = null
 

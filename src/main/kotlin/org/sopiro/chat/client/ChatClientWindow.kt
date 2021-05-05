@@ -11,7 +11,11 @@ import javax.swing.*
 import javax.swing.text.DefaultCaret
 
 
-class ChatClientWindow(title: String, private val name: String, disposeCallBack: () -> Unit) : Client()
+class ChatClientWindow(
+    title: String,
+    private val name: String,
+    disposeCallBack: () -> Unit
+) : Client()
 {
     private var window: JFrame = JFrame(title)
     private var body: JPanel
@@ -114,11 +118,6 @@ class ChatClientWindow(title: String, private val name: String, disposeCallBack:
 
         cmdLine.text = ""
         sendToServer("msg -m \"$text\" -n \"$name\"")
-
-        if (text == "ls")
-        {
-            println("${socket!!.isConnected} ${socket!!.isClosed} ${socket!!.isBound}")
-        }
     }
 
     override fun onConnect(isServerOnline: Boolean)

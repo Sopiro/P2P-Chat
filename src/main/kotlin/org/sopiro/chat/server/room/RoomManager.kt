@@ -35,15 +35,13 @@ object RoomManager
         rooms.add(Room(ip, port, roomName, hostName, 1))
     }
 
-    fun deleteRoom(
-        ip: String,
-    ): Boolean
+    fun deleteRoom(ip: String, port: Int): Boolean
     {
         for (i in rooms.indices)
         {
             val room = rooms[i]
 
-            if (room.ip == ip)
+            if (room.ip == ip && room.port == port)
             {
                 rooms.removeAt(i)
                 return true
@@ -53,13 +51,13 @@ object RoomManager
         return false
     }
 
-    fun someoneEnter(ip: String): Boolean
+    fun someoneEnter(ip: String, port: Int): Boolean
     {
         for (i in rooms.indices)
         {
             val room = rooms[i]
 
-            if (room.ip == ip)
+            if (room.ip == ip && room.port == port)
             {
                 room.numMembers++
                 return true
@@ -69,13 +67,13 @@ object RoomManager
         return false
     }
 
-    fun someoneExit(ip: String): Boolean
+    fun someoneExit(ip: String, port: Int): Boolean
     {
         for (i in rooms.indices)
         {
             val room = rooms[i]
 
-            if (room.ip == ip)
+            if (room.ip == ip && room.port == port)
             {
                 room.numMembers--
                 return true

@@ -15,7 +15,7 @@ abstract class Server()
     private val scope: CoroutineScope = CoroutineScope(Dispatchers.Default)
 
     private var serverSocket: ServerSocket? = null
-    protected val clients: MutableList<ClientHandle> = ArrayList()
+    private val clients: MutableList<ClientHandle> = ArrayList()
 
     protected val numClients: Int
         get()
@@ -86,7 +86,6 @@ abstract class Server()
 
                     "socket closed" ->
                     {
-                        println("1번")
                         System.err.println("socket closed")
                         break
                     }

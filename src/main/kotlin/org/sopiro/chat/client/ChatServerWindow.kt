@@ -17,9 +17,10 @@ import javax.swing.text.DefaultCaret
 class ChatServerWindow(
     title: String,
     private val name: String,
-    disposeCallBack: () -> Unit,
-    private val enterCallBack: () -> Unit,
-    private val exitCallBack: () -> Unit
+    disposeCallBack: (port: Int) -> Unit,
+    private val enterCallBack: (port: Int) -> Unit,
+    private val exitCallBack: (port: Int) -> Unit,
+    private val onStartCallBack: (port: Int) -> Unit
 ) : Server()
 {
     private var window: JFrame = JFrame(title)
@@ -36,6 +37,8 @@ class ChatServerWindow(
     private var memberList = Vector<Member>()
 
     private val font = Font("sansserif", Font.PLAIN, 16)
+
+    private var port: Int = 0
 
     init
     {
@@ -98,7 +101,7 @@ class ChatServerWindow(
             {
                 super.windowClosing(e)
                 terminate()
-                disposeCallBack()
+                disposeCallBack(port)
             }
         })
         enterBtn.addActionListener {
@@ -136,19 +139,20 @@ class ChatServerWindow(
 
     override fun onStartServer(port: Int)
     {
-        println("포트${port}에서 방 생성 완료")
+        this.port = port
+        onStartCallBack(port)
     }
 
     override fun onClientConnect(handle: ClientHandle)
     {
-        enterCallBack()
+        enterCallBack(port)
     }
 
     override fun onClientDisconnect(handle: ClientHandle)
     {
         super.onClientDisconnect(handle)
 
-        exitCallBack()
+        exitCallBack(port)
 
         val name = findName(handle.ip)
 

@@ -6,8 +6,12 @@ import java.awt.event.WindowAdapter
 import java.awt.event.WindowEvent
 import javax.swing.*
 
-class EnterRoomDialog(window: JFrame, title: String, modal: Boolean, callBack: (name: String) -> Unit) :
-    JDialog(window, title, modal)
+class EnterRoomDialog(
+    window: JFrame,
+    title: String,
+    modal: Boolean,
+    callBack: (name: String) -> Unit
+) : JDialog(window, title, modal)
 {
     init
     {
