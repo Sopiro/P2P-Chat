@@ -1,5 +1,6 @@
 package org.sopiro.chat.client
 
+import org.sopiro.chat.server.EnterRoomDialog
 import org.sopiro.chat.server.NewRoomDialog
 import org.sopiro.chat.server.room.Room
 import org.sopiro.chat.server.room.RoomManager
@@ -17,7 +18,8 @@ import javax.swing.table.DefaultTableModel
 class ClientWindow(title: String) : Client()
 {
     private val window: JFrame = JFrame(title)
-    private lateinit var chatWindow: ChatWindow
+    private lateinit var chatServerWindow: ChatServerWindow
+    private lateinit var chatClientWindow: ChatClientWindow
 
     private var jpnBody: JPanel
     private var jpnFoot: JPanel
@@ -63,7 +65,7 @@ class ClientWindow(title: String) : Client()
             NewRoomDialog(window, "방 만들기", true) { name: String, roomName: String ->
                 if (name.length + roomName.length < 2)
                 {
-                    alert("똑바로 입력해")
+                    alert("제대로 입력해주세요")
                 } else
                 {
                     newRoom(myPort, name, roomName)
@@ -72,7 +74,15 @@ class ClientWindow(title: String) : Client()
         }
         btnEnterRoom = JButton("접속")
         btnEnterRoom.addActionListener {
-//            onReceiveData(Parser("enter -id "))
+            EnterRoomDialog(window, "방 입장", true) { name: String ->
+                if (name.isEmpty())
+                {
+                    alert("제대로 입력해주세요 ")
+                } else
+                {
+                    enterTheRoom(name)
+                }
+            }
         }
 
         btnRefresh = JButton("새로고침")
@@ -189,11 +199,28 @@ class ClientWindow(title: String) : Client()
     private fun newRoom(port: Int, name: String, roomName: String)
     {
         window.isVisible = false
-        chatWindow = ChatWindow(roomName) {
+        chatServerWindow = ChatServerWindow(roomName, name) {
+            window.isVisible = true
+            super.sendToServer("deleteRoom")
+        }
+        chatServerWindow.launch(port)
+        super.sendToServer("newRoom -p \"$port\" -hn \"$name\" -rn \"$roomName\"")
+    }
+
+    private fun enterTheRoom(myName: String)
+    {
+        window.isVisible = false
+
+        val selectedRoom = roomData[table.selectedRow]
+
+        chatClientWindow = ChatClientWindow(selectedRoom.roomName, myName) {
             window.isVisible = true
         }
-        chatWindow.show()
-        super.sendToServer("newRoom -p \"$port\" -hn \"$name\" -rn \"$roomName\"")
+        val ip = selectedRoom.ip
+        val port = selectedRoom.port
+
+        chatClientWindow.launch(ip, port)
+        super.sendToServer("enterRoom -ip \"$ip\" -p \"$port\"")
     }
 
     private fun requestRefresh()
@@ -205,5 +232,4 @@ class ClientWindow(title: String) : Client()
     {
         JOptionPane.showMessageDialog(window, message, "notification", JOptionPane.PLAIN_MESSAGE)
     }
-
 }

@@ -16,7 +16,7 @@ class Parser(val str: String)
     {
         if (str.startsWith("|"))
         {
-            parseData(str.substring(1, str.length))
+            parseData(str.substring(1, str.length - 1))
         } else
         {
             parseCommand(str)
@@ -104,5 +104,10 @@ class Parser(val str: String)
     fun getOption(option: String): String?
     {
         return options[option]
+    }
+
+    override fun toString(): String
+    {
+        return "cmd: $cmd, tokens: $tokens"
     }
 }

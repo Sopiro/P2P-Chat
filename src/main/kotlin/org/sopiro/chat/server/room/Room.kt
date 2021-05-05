@@ -5,5 +5,5 @@ data class Room(
     val port: Int,
     val roomName: String,
     val hostName: String,
-    val numMembers: Int
+    var numMembers: Int
 )

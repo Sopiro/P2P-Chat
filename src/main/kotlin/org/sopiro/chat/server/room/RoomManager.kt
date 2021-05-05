@@ -6,10 +6,10 @@ import kotlin.collections.ArrayList
 
 object RoomManager
 {
-    private val rooms: MutableList<Room> = ArrayList()
+    val rooms: MutableList<Room> = ArrayList()
     private const val roomSize = 5
 
-    fun getRoomInfo(): String
+    fun packIntoRoomInfoString(): String
     {
         var res: String = "|roomInfo|" + rooms.size.toString() + "|"
 
@@ -30,10 +30,43 @@ object RoomManager
         port: Int,
         roomName: String,
         hostName: String,
-        numMembers: Int
     )
     {
-        rooms.add(Room(ip, port, roomName, hostName, numMembers))
+        rooms.add(Room(ip, port, roomName, hostName, 1))
+    }
+
+    fun deleteRoom(
+        ip: String,
+    ): Boolean
+    {
+        for (i in rooms.indices)
+        {
+            val room = rooms[i]
+
+            if (room.ip == ip)
+            {
+                rooms.removeAt(i)
+                return true
+            }
+        }
+
+        return false
+    }
+
+    fun someoneEnter(ip: String, port: Int): Boolean
+    {
+        for (i in rooms.indices)
+        {
+            val room = rooms[i]
+
+            if (room.ip == ip && room.port == port)
+            {
+                room.numMembers++
+                return true
+            }
+        }
+
+        return false
     }
 
     fun interpretInfo(parser: Parser): List<Room>?

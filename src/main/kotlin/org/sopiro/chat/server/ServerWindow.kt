@@ -1,5 +1,6 @@
 package org.sopiro.chat.server
 
+import org.sopiro.chat.server.room.Room
 import org.sopiro.chat.server.room.RoomManager
 import org.sopiro.chat.utils.Logger
 import org.sopiro.chat.utils.Parser
@@ -9,6 +10,7 @@ import java.awt.event.WindowAdapter
 import java.awt.event.WindowEvent
 import javax.swing.*
 import javax.swing.text.DefaultCaret
+import kotlin.system.exitProcess
 
 
 class ServerWindow(title: String) : Server()
@@ -89,9 +91,6 @@ class ServerWindow(title: String) : Server()
 
     private fun init()
     {
-//        RoomManager.newRoom("127.0.0.1", 1234, "테스트 방1", "나다1", 10)
-//        RoomManager.newRoom("127.0.0.1", 1234, "테스트 방2", "나다2", 10)
-//        RoomManager.newRoom("127.0.0.1", 1234, "테스트 방3", "나다3", 10)
     }
 
     private fun interpret()
@@ -124,6 +123,15 @@ class ServerWindow(title: String) : Server()
             "ls" ->
             {
                 logger.log("$numClients Clients are existing, ${RoomManager.howMany()} Rooms exist")
+            }
+
+            "rl" ->
+            {
+                logger.log("Room lists")
+
+                RoomManager.rooms.forEach {
+                    logger.logNoTime("ip:${it.ip} | port: ${it.port} | hostName: ${it.hostName} | roomName: ${it.roomName} | numMembers: ${it.numMembers}")
+                }
             }
 
             "cls" ->
@@ -186,15 +194,32 @@ class ServerWindow(title: String) : Server()
                 val rn = parser.getOption("rn")
                 val hn = parser.getOption("hn")
 
-                println(parser.options)
+                RoomManager.newRoom(ip, port, rn!!, hn!!)
 
-                RoomManager.newRoom(ip, port, rn!!, hn!!, 1)
-
-                sendRoomInfo(handle)
+                sendRoomInfoToAll()
 
                 logger.log("${handle.socket.localAddress} requests new room")
                 logger.logNoTime("RoomName: $rn")
                 logger.logNoTime("HostName: $hn")
+            }
+
+            "deleteRoom" ->
+            {
+                val ip = handle.socket.inetAddress.hostAddress
+
+                RoomManager.deleteRoom(ip)
+
+                sendRoomInfoToAll()
+                logger.log("${handle.socket.localAddress} deletes room")
+            }
+
+            "enterRoom" ->
+            {
+                val ip = parser.getOption("ip")
+                val port = Integer.parseInt(parser.getOption("p"))
+
+                if (!RoomManager.someoneEnter(ip!!, port))
+                    exitProcess(1)
             }
 
             "refresh" ->
@@ -221,6 +246,11 @@ class ServerWindow(title: String) : Server()
 
     private fun sendRoomInfo(handle: ClientHandle)
     {
-        send(handle, RoomManager.getRoomInfo())
+        send(handle, RoomManager.packIntoRoomInfoString())
+    }
+
+    private fun sendRoomInfoToAll()
+    {
+        sendToAll(RoomManager.packIntoRoomInfoString())
     }
 }
