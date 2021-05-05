@@ -15,7 +15,7 @@ abstract class Server()
     private val scope: CoroutineScope = CoroutineScope(Dispatchers.Default)
 
     private var serverSocket: ServerSocket? = null
-    private val clients: MutableList<ClientHandle> = ArrayList()
+    protected val clients: MutableList<ClientHandle> = ArrayList()
 
     protected val numClients: Int
         get()
@@ -30,22 +30,30 @@ abstract class Server()
         if (isStarted) return false
         isStarted = true
 
-        try
+        var portTry = port
+
+        while (true)
         {
-            serverSocket = ServerSocket(port)
+            try
+            {
+                serverSocket = ServerSocket(portTry)
 
-            onStartServer(port)
+                onStartServer(portTry)
 
-            scope.launch {
-                waitClientForever()
+                scope.launch {
+                    waitClientForever()
+                }
+
+                break
+            } catch (e: SocketException)
+            {
+                if (e.message!!.toLowerCase().startsWith("address already in use", 0))
+                {
+                    portTry++
+                }
+                isStarted = false
             }
-
-        } catch (e: SocketException)
-        {
-            println(e)
-            isStarted = false
         }
-
         return isStarted
     }
 
@@ -53,8 +61,8 @@ abstract class Server()
     {
         while (true)
         {
-            onWaitClientAccess()
             Thread.sleep(10)
+            onWaitClientAccess()
 
             try
             {
@@ -78,6 +86,7 @@ abstract class Server()
 
                     "socket closed" ->
                     {
+                        println("1번")
                         System.err.println("socket closed")
                         break
                     }
@@ -102,7 +111,11 @@ abstract class Server()
             try
             {
                 message = handle.reader.readLine()
-                if (message == null) break
+                if (message == null)
+                {
+                    onClientDisconnect(handle)
+                    break
+                }
 
                 if (message != "")
                 {
@@ -115,7 +128,12 @@ abstract class Server()
                 {
                     "connection reset" ->
                     {
-                        System.err.println("connection reset")
+                        e.printStackTrace()
+                        break
+                    }
+                    "socket closed" ->
+                    {
+                        System.err.println("socket closed")
                         break
                     }
 
@@ -123,8 +141,6 @@ abstract class Server()
                 }
             }
         }
-
-        onClientDisconnect(handle)
     }
 
     protected abstract fun onWaitClientAccess()
@@ -159,6 +175,11 @@ abstract class Server()
         println("Terminate Server Program")
 
         if (serverSocket != null)
+        {
+            clients.forEach {
+                it.release()
+            }
             serverSocket!!.close()
+        }
     }
 }

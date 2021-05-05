@@ -1,16 +1,15 @@
 package org.sopiro.chat.server
 
-import org.sopiro.chat.server.room.Room
 import org.sopiro.chat.server.room.RoomManager
 import org.sopiro.chat.utils.Logger
 import org.sopiro.chat.utils.Parser
 import java.awt.BorderLayout
 import java.awt.FlowLayout
+import java.awt.Font
 import java.awt.event.WindowAdapter
 import java.awt.event.WindowEvent
 import javax.swing.*
 import javax.swing.text.DefaultCaret
-import kotlin.system.exitProcess
 
 
 class ServerWindow(title: String) : Server()
@@ -19,13 +18,14 @@ class ServerWindow(title: String) : Server()
     private var body: JPanel
     private var foot: JPanel
     private var screen: JTextArea
-    private var scroller: JScrollPane
     private var enterBtn: JButton
     private var cmdLine: JTextField
 
     private var logger: Logger
 
     private val defaultMsg = "start -p 1234"
+
+    private val font = Font("sansserif", Font.PLAIN, 16)
 
     init
     {
@@ -35,42 +35,40 @@ class ServerWindow(title: String) : Server()
 
         (window.contentPane as JComponent).border = BorderFactory.createEmptyBorder(10, 10, 10, 10)
 
-        // Define controls
+        // Layout panels
         body = JPanel()
         body.layout = BorderLayout()
+        body.border = BorderFactory.createEmptyBorder(0, 0, 5, 0)
 
         foot = JPanel()
         foot.layout = FlowLayout(FlowLayout.RIGHT)
 
-        screen = JTextArea(20, 80)
-        logger = Logger(screen)
-
+        // Body controls
+        screen = JTextArea(20, 0)
         screen.lineWrap = true
         screen.isEditable = false
         (screen.caret as DefaultCaret).updatePolicy = DefaultCaret.ALWAYS_UPDATE
-        scroller = JScrollPane(screen, 20, 30)
+        screen.font = font
 
+        // Foot controls
         enterBtn = JButton("입력")
-        enterBtn.addActionListener {
-            interpret()
-        }
 
-        cmdLine = JTextField(80)
-        cmdLine.addActionListener {
-            enterBtn.doClick()
-        }
+        cmdLine = JTextField(60)
+        cmdLine.font = font
+        cmdLine.text = defaultMsg
 
-        body.add(scroller, BorderLayout.CENTER)
+        // Add controls into layout panel
+        body.add(JScrollPane(screen, 20, 30), BorderLayout.CENTER)
         foot.add(cmdLine)
         foot.add(enterBtn)
 
-        cmdLine.text = defaultMsg
-
+        // Add layout panels into window
         window.add(body, BorderLayout.CENTER)
         window.add(foot, BorderLayout.SOUTH)
 
         window.pack()
 
+        // Add listeners
         window.addWindowListener(object : WindowAdapter()
         {
             override fun windowClosing(e: WindowEvent)
@@ -79,18 +77,19 @@ class ServerWindow(title: String) : Server()
                 terminate()
             }
         })
+        cmdLine.addActionListener {
+            enterBtn.doClick()
+        }
+        enterBtn.addActionListener {
+            interpret()
+        }
 
         window.setLocationRelativeTo(null)
 
+        logger = Logger(screen)
         cmdLine.requestFocus()
 
         window.isVisible = true
-
-        init()
-    }
-
-    private fun init()
-    {
     }
 
     private fun interpret()
@@ -151,7 +150,12 @@ class ServerWindow(title: String) : Server()
             "exit" ->
             {
                 terminate()
-                window.dispose()
+                window.dispatchEvent(WindowEvent(window, WindowEvent.WINDOW_CLOSING))
+            }
+
+            "test" ->
+            {
+                clients[0].socket.close()
             }
 
             else -> logger.log(rawText)
@@ -172,7 +176,7 @@ class ServerWindow(title: String) : Server()
 
     override fun onClientConnect(handle: ClientHandle)
     {
-        logger.log("Got one ${handle.socket.localAddress}")
+        logger.log("Got one ${handle.ip}")
 
         // Send room info
         sendRoomInfo(handle)
@@ -189,7 +193,7 @@ class ServerWindow(title: String) : Server()
 
             "newRoom" ->
             {
-                val ip = handle.socket.inetAddress.hostAddress
+                val ip = handle.ip
                 val port = Integer.parseInt(parser.getOption("p"))
                 val rn = parser.getOption("rn")
                 val hn = parser.getOption("hn")
@@ -198,34 +202,41 @@ class ServerWindow(title: String) : Server()
 
                 sendRoomInfoToAll()
 
-                logger.log("${handle.socket.localAddress} requests new room")
+                logger.log("${handle.ip} requests new room")
                 logger.logNoTime("RoomName: $rn")
                 logger.logNoTime("HostName: $hn")
             }
 
             "deleteRoom" ->
             {
-                val ip = handle.socket.inetAddress.hostAddress
+                val ip = handle.ip
 
                 RoomManager.deleteRoom(ip)
 
                 sendRoomInfoToAll()
-                logger.log("${handle.socket.localAddress} deletes room")
+                logger.log("$ip deletes room")
             }
 
-            "enterRoom" ->
+            "rmPlus" ->
             {
-                val ip = parser.getOption("ip")
-                val port = Integer.parseInt(parser.getOption("p"))
+                val ip = handle.ip
 
-                if (!RoomManager.someoneEnter(ip!!, port))
-                    exitProcess(1)
+                RoomManager.someoneEnter(ip)
+                sendRoomInfoToAll()
+            }
+
+            "rmMinus" ->
+            {
+                val ip = handle.ip
+
+                RoomManager.someoneExit(ip)
+                sendRoomInfoToAll()
             }
 
             "refresh" ->
             {
                 sendRoomInfo(handle)
-                logger.log("${handle.socket.localAddress} requests refresh")
+                logger.log("${handle.ip} requests refresh")
             }
 
             else -> logger.log(parser.str)
@@ -234,7 +245,7 @@ class ServerWindow(title: String) : Server()
 
     override fun onClientDisconnect(handle: ClientHandle)
     {
-        logger.log("${handle.socket.inetAddress} goes out")
+        logger.log("${handle.ip} goes out")
 
         super.onClientDisconnect(handle)
     }

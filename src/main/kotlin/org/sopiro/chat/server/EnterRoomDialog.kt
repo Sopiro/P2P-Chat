@@ -15,10 +15,12 @@ class EnterRoomDialog(window: JFrame, title: String, modal: Boolean, callBack: (
         val foot = JPanel()
 
         val lblName = JLabel("닉네임")
-
         val jtfName = JTextField(10)
-
         val okBtn = JButton("확인")
+
+        jtfName.addActionListener {
+            okBtn.doClick()
+        }
 
         okBtn.addActionListener {
             dispose()

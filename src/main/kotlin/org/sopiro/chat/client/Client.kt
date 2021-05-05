@@ -15,7 +15,7 @@ abstract class Client
 {
     private val scope: CoroutineScope = CoroutineScope(Dispatchers.Default)
 
-    private var socket: Socket? = null
+    protected var socket: Socket? = null
     private var writer: PrintWriter? = null
     private var reader: BufferedReader? = null
 
@@ -59,7 +59,11 @@ abstract class Client
             try
             {
                 message = reader.readLine()
-                if (message == null) break
+                if (message == null)
+                {
+                    onServerClosed()
+                    break
+                }
 
                 if (message != "")
                 {
@@ -72,9 +76,7 @@ abstract class Client
                 {
                     "connection reset" ->
                     {
-                        System.err.println("connection reset")
-                        isServerOnline = false
-                        onServerClosed()
+                        e.printStackTrace()
                         break
                     }
 

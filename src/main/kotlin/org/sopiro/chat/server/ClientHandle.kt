@@ -10,9 +10,17 @@ data class ClientHandle(
     val writer: PrintWriter
 )
 {
+    val ip: String
+        get()
+        {
+            return socket.inetAddress.hostAddress
+        }
+
     fun release()
     {
         socket.close()
+//        reader.close()
+//        writer.close()
         //reader and writer will be closed along with the socket closing
     }
 }

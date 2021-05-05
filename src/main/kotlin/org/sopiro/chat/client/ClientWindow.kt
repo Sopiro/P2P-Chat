@@ -29,41 +29,67 @@ class ClientWindow(title: String) : Client()
     private var btnRefresh: JButton
 
     private val columnNames = Vector(listOf("방장", "방제", "인원수"))
-    private val font = Font("serif", Font.PLAIN, 16)
+    private val font = Font("sansserif", Font.PLAIN, 16)
 
     private lateinit var roomData: List<Room>
 
     private val serverIP = "172.18.48.1"
     private val serverPort = 1234
 
-    private val myPort = 12345
+    private val myPort = 5678
 
     private var readyToGo: Boolean = false
+
+    private var isServerOnline: Boolean = false
 
     init
     {
         // JFrame settings
         window.isResizable = false
         window.defaultCloseOperation = JFrame.EXIT_ON_CLOSE
-
         (window.contentPane as JComponent).border = BorderFactory.createEmptyBorder(10, 10, 10, 10)
 
+        // Layout panels
         jpnBody = JPanel()
         jpnBody.layout = BorderLayout()
-
+        jpnBody.border = BorderFactory.createMatteBorder(5, 0, 5, 0, Color(0xEEEEEE))
         jpnFoot = JPanel()
         jpnFoot.layout = FlowLayout(FlowLayout.RIGHT)
 
+        // Body controls
         table = JTable()
         table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION)
 
-        val scrollPane = JScrollPane(table)
-        scrollPane.border = BorderFactory.createMatteBorder(5, 0, 5, 0, Color(0xEEEEEE))
-
+        // Foot controls
         btnNewRoom = JButton("방만들기")
+        btnEnterRoom = JButton("접속")
+        btnRefresh = JButton("새로고침")
+
+        // Add controls into layout panel
+        jpnBody.add(JScrollPane(table))
+        jpnFoot.add(btnRefresh)
+        jpnFoot.add(btnNewRoom)
+        jpnFoot.add(btnEnterRoom)
+
+        // Add layout panels into window
+        window.add(jpnBody, BorderLayout.CENTER)
+        window.add(jpnFoot, BorderLayout.SOUTH)
+
+        window.pack()
+        window.setLocationRelativeTo(null)
+
+        // Add listeners
+        window.addWindowListener(object : WindowAdapter()
+        {
+            override fun windowClosing(e: WindowEvent)
+            {
+                super.windowClosing(e)
+                terminate()
+            }
+        })
         btnNewRoom.addActionListener {
             NewRoomDialog(window, "방 만들기", true) { name: String, roomName: String ->
-                if (name.length + roomName.length < 2)
+                if (name.trim().isEmpty() || roomName.trim().isEmpty())
                 {
                     alert("제대로 입력해주세요")
                 } else
@@ -72,10 +98,15 @@ class ClientWindow(title: String) : Client()
                 }
             }
         }
-        btnEnterRoom = JButton("접속")
         btnEnterRoom.addActionListener {
             EnterRoomDialog(window, "방 입장", true) { name: String ->
-                if (name.isEmpty())
+                if (table.selectedRow == -1)
+                {
+                    alert("방을 선택해 주세요")
+                    return@EnterRoomDialog
+                }
+
+                if (name.trim().isEmpty())
                 {
                     alert("제대로 입력해주세요 ")
                 } else
@@ -84,31 +115,9 @@ class ClientWindow(title: String) : Client()
                 }
             }
         }
-
-        btnRefresh = JButton("새로고침")
         btnRefresh.addActionListener {
             requestRefresh()
         }
-
-        jpnBody.add(scrollPane)
-        jpnFoot.add(btnNewRoom)
-        jpnFoot.add(btnEnterRoom)
-
-        window.add(jpnBody, BorderLayout.CENTER)
-        window.add(jpnFoot, BorderLayout.SOUTH)
-
-        window.pack()
-
-        window.setLocationRelativeTo(null)
-
-        window.addWindowListener(object : WindowAdapter()
-        {
-            override fun windowClosing(e: WindowEvent)
-            {
-                terminate()
-                super.windowClosing(e)
-            }
-        })
 
         window.isVisible = true
 
@@ -117,26 +126,15 @@ class ClientWindow(title: String) : Client()
 
     override fun onConnect(isServerOnline: Boolean)
     {
-        if (isServerOnline)
-        {
-            sendMessage("안녕 서버")
-        } else
+        this.isServerOnline = isServerOnline
+        if (!isServerOnline)
         {
             alert("Server is currently closed")
         }
-
-        while (!readyToGo)
-        {
-            Thread.yield()
-        }
-
-        sendMessage("안녕 난 클라이언트")
     }
 
     override fun onReceiveData(parser: Parser)
     {
-//        println("Got Message: ${parser.str}")
-
         when (parser.cmd)
         {
             "roomInfo" ->
@@ -199,10 +197,19 @@ class ClientWindow(title: String) : Client()
     private fun newRoom(port: Int, name: String, roomName: String)
     {
         window.isVisible = false
-        chatServerWindow = ChatServerWindow(roomName, name) {
-            window.isVisible = true
-            super.sendToServer("deleteRoom")
-        }
+        chatServerWindow = ChatServerWindow(
+            roomName, name,
+            {
+                window.isVisible = true
+                super.sendToServer("deleteRoom")
+            },
+            {
+                super.sendToServer("rmPlus")
+            },
+            {
+                super.sendToServer("rmMinus")
+            }
+        )
         chatServerWindow.launch(port)
         super.sendToServer("newRoom -p \"$port\" -hn \"$name\" -rn \"$roomName\"")
     }
@@ -220,12 +227,18 @@ class ClientWindow(title: String) : Client()
         val port = selectedRoom.port
 
         chatClientWindow.launch(ip, port)
-        super.sendToServer("enterRoom -ip \"$ip\" -p \"$port\"")
     }
 
     private fun requestRefresh()
     {
-        super.sendToServer("refresh")
+        if (!isServerOnline)
+        {
+            super.start(serverIP, serverPort)
+
+        } else
+        {
+            super.sendToServer("refresh")
+        }
     }
 
     private fun alert(message: Any?)

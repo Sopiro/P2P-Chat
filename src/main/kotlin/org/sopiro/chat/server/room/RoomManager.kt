@@ -53,13 +53,13 @@ object RoomManager
         return false
     }
 
-    fun someoneEnter(ip: String, port: Int): Boolean
+    fun someoneEnter(ip: String): Boolean
     {
         for (i in rooms.indices)
         {
             val room = rooms[i]
 
-            if (room.ip == ip && room.port == port)
+            if (room.ip == ip)
             {
                 room.numMembers++
                 return true
@@ -68,6 +68,23 @@ object RoomManager
 
         return false
     }
+
+    fun someoneExit(ip: String): Boolean
+    {
+        for (i in rooms.indices)
+        {
+            val room = rooms[i]
+
+            if (room.ip == ip)
+            {
+                room.numMembers--
+                return true
+            }
+        }
+
+        return false
+    }
+
 
     fun interpretInfo(parser: Parser): List<Room>?
     {

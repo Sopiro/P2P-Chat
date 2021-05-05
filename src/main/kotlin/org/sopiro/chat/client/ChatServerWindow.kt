@@ -6,6 +6,7 @@ import org.sopiro.chat.utils.Parser
 import java.awt.BorderLayout
 import java.awt.Dimension
 import java.awt.FlowLayout
+import java.awt.Font
 import java.awt.event.WindowAdapter
 import java.awt.event.WindowEvent
 import java.util.*
@@ -13,7 +14,13 @@ import javax.swing.*
 import javax.swing.text.DefaultCaret
 
 
-class ChatServerWindow(title: String, val name: String, disposeCallBack: () -> Unit) : Server()
+class ChatServerWindow(
+    title: String,
+    private val name: String,
+    disposeCallBack: () -> Unit,
+    private val enterCallBack: () -> Unit,
+    private val exitCallBack: () -> Unit
+) : Server()
 {
     private var window: JFrame = JFrame(title)
     private var body: JPanel
@@ -27,18 +34,17 @@ class ChatServerWindow(title: String, val name: String, disposeCallBack: () -> U
     private var cmdLine: JTextField
 
     private var memberList = Vector<Member>()
-    private var listData = Vector<String>()
 
+    private val font = Font("sansserif", Font.PLAIN, 16)
 
     init
     {
         // JFrame settings
         window.isResizable = false
         window.defaultCloseOperation = JFrame.DISPOSE_ON_CLOSE
-
         (window.contentPane as JComponent).border = BorderFactory.createEmptyBorder(10, 10, 10, 10)
 
-        // Define controls
+        // Layout panels
         body = JPanel()
         body.layout = BorderLayout(10, 10)
         body.border = BorderFactory.createEmptyBorder(10, 10, 10, 10)
@@ -50,52 +56,57 @@ class ChatServerWindow(title: String, val name: String, disposeCallBack: () -> U
         foot = JPanel()
         foot.layout = FlowLayout(FlowLayout.RIGHT)
 
-        screen = JTextArea(30, 60)
-
+        // Body controls
+        screen = JTextArea(20, 0)
         screen.lineWrap = true
         screen.isEditable = false
         (screen.caret as DefaultCaret).updatePolicy = DefaultCaret.ALWAYS_UPDATE
+        screen.font = font
 
         enterBtn = JButton("입력")
-        enterBtn.addActionListener {
-            interpret()
-        }
 
-        cmdLine = JTextField(80)
-        cmdLine.addActionListener {
-            enterBtn.doClick()
-        }
+        cmdLine = JTextField(60)
+
+        cmdLine.font = font
 
         label = JLabel("참가자")
         label.horizontalAlignment = JLabel.CENTER
 
-        list = JList(listData)
+        list = JList()
         list.selectionMode = ListSelectionModel.SINGLE_SELECTION
-
         list.preferredSize = Dimension(100, 0)
+        list.maximumSize = Dimension(100, 1000)
 
+        // Add controls into layout panel
         right.add(label, BorderLayout.NORTH)
         right.add(JScrollPane(list, 20, 30), BorderLayout.CENTER)
         body.add(JScrollPane(screen, 20, 30), BorderLayout.CENTER)
         foot.add(cmdLine)
         foot.add(enterBtn)
 
+        // Add layout panels into window
         window.add(body, BorderLayout.CENTER)
         window.add(right, BorderLayout.EAST)
         window.add(foot, BorderLayout.SOUTH)
 
         window.pack()
 
+        // Add listeners
         window.addWindowListener(object : WindowAdapter()
         {
             override fun windowClosing(e: WindowEvent)
             {
-                onDestroy()
-                disposeCallBack()
                 super.windowClosing(e)
+                terminate()
+                disposeCallBack()
             }
         })
-
+        enterBtn.addActionListener {
+            interpret()
+        }
+        cmdLine.addActionListener {
+            enterBtn.doClick()
+        }
         window.setLocationRelativeTo(null)
 
         cmdLine.requestFocus()
@@ -105,7 +116,7 @@ class ChatServerWindow(title: String, val name: String, disposeCallBack: () -> U
     {
         window.isVisible = true
 
-        newMember("me", name)
+        addMember("me", name)
 
         super.start(port)
     }
@@ -125,19 +136,24 @@ class ChatServerWindow(title: String, val name: String, disposeCallBack: () -> U
 
     override fun onStartServer(port: Int)
     {
-        println("서버 생성 성공")
+        println("포트${port}에서 방 생성 완료")
     }
 
     override fun onClientConnect(handle: ClientHandle)
     {
-        println("한명 들어옴")
+        enterCallBack()
     }
 
     override fun onClientDisconnect(handle: ClientHandle)
     {
         super.onClientDisconnect(handle)
 
-        deleteMember(handle.socket.inetAddress.hostAddress)
+        exitCallBack()
+
+        val name = findName(handle.ip)
+
+        newMessage("$name 님이 퇴장하셨습니다.")
+        deleteMember(handle.ip)
     }
 
     override fun onReceiveData(handle: ClientHandle, parser: Parser)
@@ -146,18 +162,11 @@ class ChatServerWindow(title: String, val name: String, disposeCallBack: () -> U
         {
             "ienter" ->
             {
-                val ip = handle.socket.inetAddress.hostAddress
+                val ip = handle.ip
                 val name = parser.getOption("n")
 
-                println(ip)
-                println(name)
-
-                newMember(ip, name!!)
-            }
-
-            "iexit" ->
-            {
-                deleteMember(parser.getOption("n")!!)
+                newMessage("$name 님이 입장하셨습니다.")
+                addMember(ip, name!!)
             }
 
             "msg" ->
@@ -167,12 +176,20 @@ class ChatServerWindow(title: String, val name: String, disposeCallBack: () -> U
 
                 newMessage(name + ": " + msg!!)
             }
+
+            else -> println(parser)
         }
     }
 
-    private fun onDestroy()
+    private fun findName(ip: String): String?
     {
-        terminate()
+        for (i in memberList.indices)
+        {
+            val member = memberList[i]
+            if (member.ip == ip) return member.name
+        }
+
+        return null
     }
 
     private fun deleteMember(ip: String)
@@ -191,7 +208,7 @@ class ChatServerWindow(title: String, val name: String, disposeCallBack: () -> U
         updateNameListAndNotify()
     }
 
-    private fun newMember(ip: String, name: String)
+    private fun addMember(ip: String, name: String)
     {
         memberList.add(Member(ip, name))
 
@@ -200,13 +217,15 @@ class ChatServerWindow(title: String, val name: String, disposeCallBack: () -> U
 
     private fun updateNameListAndNotify()
     {
-        listData.clear()
+        val listModel = DefaultListModel<String>()
 
         memberList.forEach {
-            listData.add(it.name)
+            listModel.addElement(it.name)
         }
 
+        list.model = listModel
         list.updateUI()
+
         notifyMemberUpdate()
     }
 

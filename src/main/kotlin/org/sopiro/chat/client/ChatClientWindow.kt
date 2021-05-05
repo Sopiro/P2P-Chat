@@ -4,9 +4,9 @@ import org.sopiro.chat.utils.Parser
 import java.awt.BorderLayout
 import java.awt.Dimension
 import java.awt.FlowLayout
+import java.awt.Font
 import java.awt.event.WindowAdapter
 import java.awt.event.WindowEvent
-import java.util.*
 import javax.swing.*
 import javax.swing.text.DefaultCaret
 
@@ -20,11 +20,9 @@ class ChatClientWindow(title: String, private val name: String, disposeCallBack:
     private var screen: JTextArea
     private var label: JLabel
     private var list: JList<String>
-
     private var enterBtn: JButton
     private var cmdLine: JTextField
-
-    private var listData = Vector<String>()
+    private val font = Font("sansserif", Font.PLAIN, 16)
 
     init
     {
@@ -34,7 +32,7 @@ class ChatClientWindow(title: String, private val name: String, disposeCallBack:
 
         (window.contentPane as JComponent).border = BorderFactory.createEmptyBorder(10, 10, 10, 10)
 
-        // Define controls
+        // Layout panels
         body = JPanel()
         body.layout = BorderLayout(10, 10)
         body.border = BorderFactory.createEmptyBorder(10, 10, 10, 10)
@@ -46,42 +44,42 @@ class ChatClientWindow(title: String, private val name: String, disposeCallBack:
         foot = JPanel()
         foot.layout = FlowLayout(FlowLayout.RIGHT)
 
-        screen = JTextArea(30, 60)
-
+        // Body controls
+        screen = JTextArea(20, 0)
         screen.lineWrap = true
         screen.isEditable = false
         (screen.caret as DefaultCaret).updatePolicy = DefaultCaret.ALWAYS_UPDATE
+        screen.font = font
 
+        // Foot controls
         enterBtn = JButton("입력")
-        enterBtn.addActionListener {
-            interpret()
-        }
+        cmdLine = JTextField(60)
+        cmdLine.font = font
 
-        cmdLine = JTextField(80)
-        cmdLine.addActionListener {
-            enterBtn.doClick()
-        }
-
+        // Right controls
         label = JLabel("참가자")
         label.horizontalAlignment = JLabel.CENTER
 
-        list = JList(listData)
+        list = JList()
         list.selectionMode = ListSelectionModel.SINGLE_SELECTION
-
         list.preferredSize = Dimension(100, 0)
+        list.maximumSize = Dimension(100, 1000)
 
+        // Add controls into layout panel
         right.add(label, BorderLayout.NORTH)
         right.add(JScrollPane(list, 20, 30), BorderLayout.CENTER)
         body.add(JScrollPane(screen, 20, 30), BorderLayout.CENTER)
         foot.add(cmdLine)
         foot.add(enterBtn)
 
+        // Add layout panels into window
         window.add(body, BorderLayout.CENTER)
         window.add(right, BorderLayout.EAST)
         window.add(foot, BorderLayout.SOUTH)
 
         window.pack()
 
+        // Add listeners
         window.addWindowListener(object : WindowAdapter()
         {
             override fun windowClosing(e: WindowEvent)
@@ -91,6 +89,12 @@ class ChatClientWindow(title: String, private val name: String, disposeCallBack:
                 super.windowClosing(e)
             }
         })
+        cmdLine.addActionListener {
+            enterBtn.doClick()
+        }
+        enterBtn.addActionListener {
+            interpret()
+        }
 
         window.setLocationRelativeTo(null)
 
@@ -110,11 +114,15 @@ class ChatClientWindow(title: String, private val name: String, disposeCallBack:
 
         cmdLine.text = ""
         sendToServer("msg -m \"$text\" -n \"$name\"")
+
+        if (text == "ls")
+        {
+            println("${socket!!.isConnected} ${socket!!.isClosed} ${socket!!.isBound}")
+        }
     }
 
     override fun onConnect(isServerOnline: Boolean)
     {
-        println("방 입장 성공")
         sendToServer("ienter -n \"$name\"")
     }
 
@@ -124,15 +132,15 @@ class ChatClientWindow(title: String, private val name: String, disposeCallBack:
         {
             "memberInfo" ->
             {
-                println(parser)
-
-                listData.clear()
+                val listModel = DefaultListModel<String>()
 
                 for (i in 1 until parser.tokens.size)
                 {
-                    listData.add(parser.tokens[i])
+                    listModel.addElement(parser.tokens[i])
                 }
 
+                list.model = listModel
+                Thread.sleep(100)
                 list.updateUI()
             }
 
@@ -146,6 +154,6 @@ class ChatClientWindow(title: String, private val name: String, disposeCallBack:
 
     override fun onServerClosed()
     {
-        window.dispose()
+        window.dispatchEvent(WindowEvent(window, WindowEvent.WINDOW_CLOSING))
     }
 }

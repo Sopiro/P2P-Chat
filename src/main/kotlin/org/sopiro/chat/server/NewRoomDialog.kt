@@ -16,11 +16,13 @@ class NewRoomDialog(window: JFrame, title: String, modal: Boolean, callBack: (na
 
         val lblName = JLabel("닉네임")
         val lblRoomName = JLabel("방 이름")
-
         val jtfName = JTextField(10)
         val jtfRoomName = JTextField(10)
-
         val okBtn = JButton("확인")
+
+        jtfRoomName.addActionListener {
+            okBtn.doClick()
+        }
 
         okBtn.addActionListener {
             dispose()
