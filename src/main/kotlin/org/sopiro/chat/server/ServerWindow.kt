@@ -1,11 +1,11 @@
 package org.sopiro.chat.server
 
 import org.sopiro.chat.server.room.RoomManager
+import org.sopiro.chat.utils.FontLib
 import org.sopiro.chat.utils.Logger
 import org.sopiro.chat.utils.Parser
 import java.awt.BorderLayout
 import java.awt.FlowLayout
-import java.awt.Font
 import java.awt.event.WindowAdapter
 import java.awt.event.WindowEvent
 import javax.swing.*
@@ -24,8 +24,6 @@ class ServerWindow(title: String) : Server()
     private var logger: Logger
 
     private val defaultMsg = "start -p 1234"
-
-    private val font = Font("sansserif", Font.PLAIN, 16)
 
     init
     {
@@ -48,13 +46,14 @@ class ServerWindow(title: String) : Server()
         screen.lineWrap = true
         screen.isEditable = false
         (screen.caret as DefaultCaret).updatePolicy = DefaultCaret.ALWAYS_UPDATE
-        screen.font = font
+        screen.font = FontLib.font16
 
         // Foot controls
         enterBtn = JButton("입력")
+        enterBtn.font = FontLib.font12
 
         cmdLine = JTextField(60)
-        cmdLine.font = font
+        cmdLine.font = FontLib.font16
         cmdLine.text = defaultMsg
 
         // Add controls into layout panel

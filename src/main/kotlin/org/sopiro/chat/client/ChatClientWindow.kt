@@ -1,5 +1,6 @@
 package org.sopiro.chat.client
 
+import org.sopiro.chat.utils.FontLib
 import org.sopiro.chat.utils.Parser
 import java.awt.BorderLayout
 import java.awt.Dimension
@@ -26,7 +27,6 @@ class ChatClientWindow(
     private var list: JList<String>
     private var enterBtn: JButton
     private var cmdLine: JTextField
-    private val font = Font("sansserif", Font.PLAIN, 16)
 
     init
     {
@@ -53,21 +53,24 @@ class ChatClientWindow(
         screen.lineWrap = true
         screen.isEditable = false
         (screen.caret as DefaultCaret).updatePolicy = DefaultCaret.ALWAYS_UPDATE
-        screen.font = font
+        screen.font = FontLib.font16
 
         // Foot controls
         enterBtn = JButton("입력")
+        enterBtn.font = FontLib.font16
         cmdLine = JTextField(60)
-        cmdLine.font = font
+        cmdLine.font = FontLib.font16
 
         // Right controls
         label = JLabel("참가자")
         label.horizontalAlignment = JLabel.CENTER
+        label.font = FontLib.font16
 
         list = JList()
         list.selectionMode = ListSelectionModel.SINGLE_SELECTION
         list.preferredSize = Dimension(100, 0)
         list.maximumSize = Dimension(100, 1000)
+        list.font = FontLib.font16
 
         // Add controls into layout panel
         right.add(label, BorderLayout.NORTH)
@@ -139,7 +142,12 @@ class ChatClientWindow(
                 }
 
                 list.model = listModel
-                Thread.sleep(100)
+
+                val renderer = DefaultListCellRenderer()
+                renderer.horizontalAlignment = JLabel.CENTER
+                list.cellRenderer = renderer
+
+                Thread.yield()
                 list.updateUI()
             }
 
@@ -154,5 +162,6 @@ class ChatClientWindow(
     override fun onServerClosed()
     {
         window.dispatchEvent(WindowEvent(window, WindowEvent.WINDOW_CLOSING))
+        JOptionPane.showMessageDialog(window, "방장이 방을 나갔습니다.", "알림", JOptionPane.PLAIN_MESSAGE)
     }
 }

@@ -1,5 +1,6 @@
 package org.sopiro.chat.server
 
+import org.sopiro.chat.utils.FontLib
 import java.awt.BorderLayout
 import java.awt.GridLayout
 import java.awt.event.WindowAdapter
@@ -19,8 +20,11 @@ class EnterRoomDialog(
         val foot = JPanel()
 
         val lblName = JLabel("닉네임")
+        lblName.font = FontLib.font12
         val jtfName = JTextField(10)
+        jtfName.font = FontLib.font12
         val okBtn = JButton("확인")
+        okBtn.font = FontLib.font12
 
         jtfName.addActionListener {
             okBtn.doClick()

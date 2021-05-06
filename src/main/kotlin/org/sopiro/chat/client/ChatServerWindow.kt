@@ -2,11 +2,11 @@ package org.sopiro.chat.client
 
 import org.sopiro.chat.server.ClientHandle
 import org.sopiro.chat.server.Server
+import org.sopiro.chat.utils.FontLib
 import org.sopiro.chat.utils.Parser
 import java.awt.BorderLayout
 import java.awt.Dimension
 import java.awt.FlowLayout
-import java.awt.Font
 import java.awt.event.WindowAdapter
 import java.awt.event.WindowEvent
 import java.util.*
@@ -36,8 +36,6 @@ class ChatServerWindow(
 
     private var memberList = Vector<Member>()
 
-    private val font = Font("sansserif", Font.PLAIN, 16)
-
     private var port: Int = 0
 
     init
@@ -64,21 +62,23 @@ class ChatServerWindow(
         screen.lineWrap = true
         screen.isEditable = false
         (screen.caret as DefaultCaret).updatePolicy = DefaultCaret.ALWAYS_UPDATE
-        screen.font = font
+        screen.font = FontLib.font16
 
         enterBtn = JButton("입력")
+        enterBtn.font = FontLib.font16
 
         cmdLine = JTextField(60)
-
-        cmdLine.font = font
+        cmdLine.font = FontLib.font16
 
         label = JLabel("참가자")
         label.horizontalAlignment = JLabel.CENTER
+        label.font = FontLib.font16
 
         list = JList()
         list.selectionMode = ListSelectionModel.SINGLE_SELECTION
         list.preferredSize = Dimension(100, 0)
         list.maximumSize = Dimension(100, 1000)
+        list.font = FontLib.font16
 
         // Add controls into layout panel
         right.add(label, BorderLayout.NORTH)
@@ -228,6 +228,11 @@ class ChatServerWindow(
         }
 
         list.model = listModel
+
+        val renderer = DefaultListCellRenderer()
+        renderer.horizontalAlignment = JLabel.CENTER
+        list.cellRenderer = renderer
+
         list.updateUI()
 
         notifyMemberUpdate()

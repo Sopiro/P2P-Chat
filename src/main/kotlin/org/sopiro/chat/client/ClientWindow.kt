@@ -4,16 +4,18 @@ import org.sopiro.chat.server.EnterRoomDialog
 import org.sopiro.chat.server.NewRoomDialog
 import org.sopiro.chat.server.room.Room
 import org.sopiro.chat.server.room.RoomManager
+import org.sopiro.chat.utils.FontLib
 import org.sopiro.chat.utils.Parser
 import java.awt.BorderLayout
 import java.awt.Color
 import java.awt.FlowLayout
-import java.awt.Font
 import java.awt.event.WindowAdapter
 import java.awt.event.WindowEvent
 import java.util.*
 import javax.swing.*
+import javax.swing.table.DefaultTableCellRenderer
 import javax.swing.table.DefaultTableModel
+
 
 class ClientWindow(title: String) : Client()
 {
@@ -29,7 +31,6 @@ class ClientWindow(title: String) : Client()
     private var btnRefresh: JButton
 
     private val columnNames = Vector(listOf("방장", "방제", "인원수"))
-    private val font = Font("sansserif", Font.PLAIN, 16)
 
     private lateinit var roomData: List<Room>
 
@@ -60,8 +61,11 @@ class ClientWindow(title: String) : Client()
 
         // Foot controls
         btnNewRoom = JButton("방만들기")
+        btnNewRoom.font = FontLib.font16
         btnEnterRoom = JButton("접속")
+        btnEnterRoom.font = FontLib.font16
         btnRefresh = JButton("새로고침")
+        btnRefresh.font = FontLib.font16
 
         // Add controls into layout panel
         jpnBody.add(JScrollPane(table))
@@ -179,7 +183,14 @@ class ClientWindow(title: String) : Client()
 
         table.model = dtm
         table.rowHeight = 30
-        table.font = font
+        table.font = FontLib.font16
+
+        val centerRenderer = DefaultTableCellRenderer()
+        centerRenderer.horizontalAlignment = JLabel.CENTER
+
+        table.columnModel.getColumn(0).cellRenderer = centerRenderer
+        table.columnModel.getColumn(1).cellRenderer = centerRenderer
+        table.columnModel.getColumn(2).cellRenderer = centerRenderer
 
         table.updateUI()
         table.columnModel.getColumn(1).minWidth = 230
@@ -242,6 +253,6 @@ class ClientWindow(title: String) : Client()
 
     private fun alert(message: Any?)
     {
-        JOptionPane.showMessageDialog(window, message, "notification", JOptionPane.PLAIN_MESSAGE)
+        JOptionPane.showMessageDialog(window, message, "알림", JOptionPane.PLAIN_MESSAGE)
     }
 }
