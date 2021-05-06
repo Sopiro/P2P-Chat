@@ -131,7 +131,7 @@ class ClientWindow(title: String) : Client()
         this.isServerOnline = isServerOnline
         if (!isServerOnline)
         {
-            alert("Server is currently closed")
+            alert("마스터 서버가 닫혀있습니다.")
         }
     }
 
