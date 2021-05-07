@@ -1,17 +1,15 @@
 package org.sopiro.chat.client
 
-import org.sopiro.chat.server.EnterRoomDialog
-import org.sopiro.chat.server.NewRoomDialog
 import org.sopiro.chat.server.room.Room
 import org.sopiro.chat.server.room.RoomManager
 import org.sopiro.chat.utils.FontLib
-import org.sopiro.chat.utils.MyIp
 import org.sopiro.chat.utils.Parser
 import java.awt.BorderLayout
 import java.awt.Color
 import java.awt.FlowLayout
 import java.awt.event.WindowAdapter
 import java.awt.event.WindowEvent
+import java.lang.Exception
 import java.util.*
 import javax.swing.*
 import javax.swing.table.DefaultTableCellRenderer
@@ -30,13 +28,14 @@ class ClientWindow(title: String) : Client()
     private var btnNewRoom: JButton
     private var btnEnterRoom: JButton
     private var btnRefresh: JButton
+    private var menubar: JMenuBar
 
     private val columnNames = Vector(listOf("방장", "방제", "인원수"))
 
     private lateinit var roomData: List<Room>
 
-    private val serverIP = "14.38.149.139"
-    private val serverPort = 1234
+    private var serverIP = "14.38.149.139"
+    private var serverPort = 1234
 
     private var myPort = 5678
 
@@ -48,6 +47,14 @@ class ClientWindow(title: String) : Client()
         window.isResizable = false
         window.defaultCloseOperation = JFrame.EXIT_ON_CLOSE
         (window.contentPane as JComponent).border = BorderFactory.createEmptyBorder(10, 10, 10, 10)
+
+        menubar = JMenuBar()
+        val menu1 = JMenu("설정")
+        menu1.font = FontLib.font12
+        val item1 = JMenuItem("마스터 서버 설정")
+        item1.font = FontLib.font12
+        menu1.add(item1)
+        menubar.add(menu1)
 
         // Layout panels
         jpnBody = JPanel()
@@ -75,6 +82,7 @@ class ClientWindow(title: String) : Client()
         jpnFoot.add(btnEnterRoom)
 
         // Add layout panels into window
+        window.jMenuBar = menubar
         window.add(jpnBody, BorderLayout.CENTER)
         window.add(jpnFoot, BorderLayout.SOUTH)
 
@@ -120,6 +128,23 @@ class ClientWindow(title: String) : Client()
         }
         btnRefresh.addActionListener {
             requestRefresh()
+        }
+
+        item1.addActionListener {
+            MasterServerSettingDialog(window, "마스터 서버 설정", true, serverIP, serverPort) { ip, port ->
+                try
+                {
+                    if(ip.split(".").size != 4) throw Exception()
+                    val portInt = Integer.parseInt(port)
+                    
+                    serverIP = ip
+                    serverPort = portInt
+                    requestRefresh()
+                }catch (e: Exception)
+                {
+                    alert("서버ip와 port를 제대로 입력해주세요.")
+                }
+            }
         }
 
         window.isVisible = true

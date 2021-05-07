@@ -206,7 +206,7 @@ class ServerWindow(title: String) : Server()
 
     override fun onStartServer(port: Int)
     {
-        logger.log("Server started on port: $port")
+        logger.log("Server started on : $port")
     }
 
     override fun onWaitClientAccess()

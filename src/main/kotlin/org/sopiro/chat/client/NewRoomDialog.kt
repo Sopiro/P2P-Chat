@@ -1,4 +1,4 @@
-package org.sopiro.chat.server
+package org.sopiro.chat.client
 
 import org.sopiro.chat.utils.FontLib
 import java.awt.BorderLayout
@@ -7,36 +7,43 @@ import java.awt.event.WindowAdapter
 import java.awt.event.WindowEvent
 import javax.swing.*
 
-class EnterRoomDialog(
+class NewRoomDialog(
     window: JFrame,
     title: String,
     modal: Boolean,
-    callBack: (name: String) -> Unit
-) : JDialog(window, title, modal)
+    callBack: (name: String, roomName: String) -> Unit
+) :
+    JDialog(window, title, modal)
 {
     init
     {
-        val body = JPanel(GridLayout(1, 2, 10, 5))
+        val body = JPanel(GridLayout(2, 2, 10, 5))
         val foot = JPanel()
 
         val lblName = JLabel("닉네임")
         lblName.font = FontLib.font12
+        val lblRoomName = JLabel("방 이름")
+        lblRoomName.font = FontLib.font12
         val jtfName = JTextField(10)
         jtfName.font = FontLib.font12
+        val jtfRoomName = JTextField(10)
+        jtfRoomName.font = FontLib.font12
         val okBtn = JButton("확인")
         okBtn.font = FontLib.font12
 
-        jtfName.addActionListener {
+        jtfRoomName.addActionListener {
             okBtn.doClick()
         }
 
         okBtn.addActionListener {
             dispose()
-            callBack(jtfName.text)
+            callBack(jtfName.text, jtfRoomName.text)
         }
 
         body.add(lblName)
         body.add(jtfName)
+        body.add(lblRoomName)
+        body.add(jtfRoomName)
         foot.add(okBtn)
 
         add(body, BorderLayout.CENTER)
