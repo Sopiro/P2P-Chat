@@ -1,15 +1,22 @@
 package org.sopiro.chat.server
 
+import jdk.nashorn.internal.parser.JSONParser
 import org.sopiro.chat.server.room.RoomManager
 import org.sopiro.chat.utils.FontLib
 import org.sopiro.chat.utils.Logger
+import org.sopiro.chat.utils.MyIp
 import org.sopiro.chat.utils.Parser
 import java.awt.BorderLayout
 import java.awt.FlowLayout
 import java.awt.event.WindowAdapter
 import java.awt.event.WindowEvent
+import java.io.BufferedReader
+import java.io.InputStreamReader
+import java.net.Inet4Address
+import java.net.URL
 import javax.swing.*
 import javax.swing.text.DefaultCaret
+import kotlin.concurrent.thread
 
 
 class ServerWindow(title: String) : Server()
@@ -24,6 +31,8 @@ class ServerWindow(title: String) : Server()
     private var logger: Logger
 
     private val defaultMsg = "start -p 1234"
+
+    private var port: Int? = null
 
     init
     {
@@ -102,8 +111,8 @@ class ServerWindow(title: String) : Server()
             {
                 try
                 {
-                    val port = Integer.parseInt(parser.getOption("p"))
-                    if (!super.start(port))
+                    port = Integer.parseInt(parser.getOption("p"))
+                    if (!super.start(port!!))
                     {
                         logger.log("Server is already Online")
                     }
@@ -146,6 +155,18 @@ class ServerWindow(title: String) : Server()
                 logger.log("Notified to all clients: $msg")
             }
 
+            "ip" ->
+            {
+                thread {
+                    logger.log(MyIp.ip())
+                }
+            }
+
+            "port" ->
+            {
+                logger.log(port!!.toString())
+            }
+
             "help" ->
             {
                 logger.log("help")
@@ -160,6 +181,10 @@ class ServerWindow(title: String) : Server()
                 logger.logNoTime("    usage: cls, clear")
                 logger.logNoTime("[noti] -> Notify a message to all clients")
                 logger.logNoTime("    usage: noti -m \"message\"")
+                logger.logNoTime("[ip] -> show your ip")
+                logger.logNoTime("    ip:")
+                logger.logNoTime("[port] -> show port that program run on")
+                logger.logNoTime("    port:")
                 logger.logNoTime("[help] -> Show this")
                 logger.logNoTime("    usage: help")
                 logger.logNoTime("[exit] -> End server program")

@@ -5,6 +5,7 @@ import org.sopiro.chat.server.NewRoomDialog
 import org.sopiro.chat.server.room.Room
 import org.sopiro.chat.server.room.RoomManager
 import org.sopiro.chat.utils.FontLib
+import org.sopiro.chat.utils.MyIp
 import org.sopiro.chat.utils.Parser
 import java.awt.BorderLayout
 import java.awt.Color
@@ -34,7 +35,7 @@ class ClientWindow(title: String) : Client()
 
     private lateinit var roomData: List<Room>
 
-    private val serverIP = "172.18.48.1"
+    private val serverIP = "14.38.149.139"
     private val serverPort = 1234
 
     private var myPort = 5678
@@ -194,11 +195,6 @@ class ClientWindow(title: String) : Client()
 
         table.updateUI()
         table.columnModel.getColumn(1).minWidth = 230
-    }
-
-    private fun sendMessage(message: String)
-    {
-        super.sendToServer("msg -m \"$message\"")
     }
 
     private fun newRoom(port: Int, name: String, roomName: String)
