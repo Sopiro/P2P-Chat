@@ -327,7 +327,6 @@ class ServerWindow(title: String) : Server()
         }
 
         t.join()
-        testClient.terminate()
 
         return res
     }
