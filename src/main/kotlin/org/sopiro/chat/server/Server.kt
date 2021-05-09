@@ -7,6 +7,7 @@ import org.sopiro.chat.utils.Parser
 import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.io.PrintWriter
+import java.lang.Exception
 import java.net.ServerSocket
 import java.net.SocketException
 
@@ -74,19 +75,25 @@ abstract class Server()
                     handleClient(ClientHandle(socket, reader, writer))
                 }
 
-            } catch (e: SocketException)
+            } catch (e: Exception)
             {
                 when (e.message!!.toLowerCase())
                 {
-                    "socket is closed" ->
+                    "connection reset" ->
                     {
-                        System.err.println("socket is closed")
+                        System.err.println("Server: connection reset")
+                        break
+                    }
+
+                    "socket is closed" -> // self termination
+                    {
+                        System.err.println("Server: socket is closed")
                         break
                     }
 
                     "socket closed" ->
                     {
-                        System.err.println("socket closed")
+                        System.err.println("Server: socket closed")
                         break
                     }
                 }

@@ -59,7 +59,7 @@ abstract class Client()
             try
             {
                 message = reader.readLine()
-                if (message == null)
+                if (message == null) // Server termination
                 {
                     onServerClosed()
                     break
@@ -76,13 +76,19 @@ abstract class Client()
                 {
                     "connection reset" ->
                     {
-                        e.printStackTrace()
+                        System.err.println("Client: connection reset")
                         break
                     }
 
                     "socket closed" ->
                     {
-                        System.err.println("socket closed")
+                        System.err.println("Client: socket closed")
+                        break
+                    }
+
+                    "socket is closed" -> // self termination
+                    {
+                        System.err.println("Client: socket is closed")
                         break
                     }
 

@@ -239,6 +239,8 @@ class ClientWindow(title: String) : Client()
 
     private fun checkRoomable()
     {
+        if (amIRoomable != null) return
+
         thread {
             val server = object : Server()
             {
@@ -262,7 +264,7 @@ class ClientWindow(title: String) : Client()
 
             server.start(myPort)
 
-            while(amIRoomable == null)
+            while (amIRoomable == null)
             {
                 Thread.yield()
             }

@@ -306,28 +306,28 @@ class ServerWindow(title: String) : Server()
     private fun tryConnect(ip: String, port: Int): Boolean
     {
         var res = false
-
-        val t = thread {
-            val test = object : Client()
+        val testClient = object : Client()
+        {
+            override fun onConnect(isServerOnline: Boolean)
             {
-                override fun onConnect(isServerOnline: Boolean)
-                {
-                    res = isServerOnline
-                }
-
-                override fun onReceiveData(parser: Parser)
-                {
-                }
-
-                override fun onServerClosed()
-                {
-                }
+                res = isServerOnline
             }
 
-            test.start(ip, port)
+            override fun onReceiveData(parser: Parser)
+            {
+            }
+
+            override fun onServerClosed()
+            {
+            }
+        }
+
+        val t = thread {
+            testClient.start(ip, port)
         }
 
         t.join()
+        testClient.terminate()
 
         return res
     }
