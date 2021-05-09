@@ -1,6 +1,6 @@
 package org.sopiro.chat.client
 
-import org.sopiro.chat.utils.FontLib
+import org.sopiro.chat.utils.Resources
 import java.awt.BorderLayout
 import java.awt.GridLayout
 import javax.swing.*
@@ -17,21 +17,23 @@ class MasterServerSettingDialog(
 {
     init
     {
+        this.setIconImage(Resources.icon)
+
         val body = JPanel(GridLayout(2, 2, 10, 5))
         val foot = JPanel()
 
         val lblIp = JLabel("마스터서버 IP")
-        lblIp.font = FontLib.font12
+        lblIp.font = Resources.font12
         val lblPort = JLabel("마스터서버 port")
-        lblPort.font = FontLib.font12
+        lblPort.font = Resources.font12
         val jtfIp = JTextField(10)
         jtfIp.text = serverIP
-        jtfIp.font = FontLib.font12
+        jtfIp.font = Resources.font12
         val jtfPort = JTextField(10)
         jtfPort.text = serverPort.toString()
-        jtfPort.font = FontLib.font12
+        jtfPort.font = Resources.font12
         val okBtn = JButton("확인")
-        okBtn.font = FontLib.font12
+        okBtn.font = Resources.font12
 
         jtfPort.addActionListener {
             okBtn.doClick()
@@ -56,7 +58,7 @@ class MasterServerSettingDialog(
         pack()
         setLocationRelativeTo(null)
 
-        defaultCloseOperation = WindowConstants.DISPOSE_ON_CLOSE;
+        defaultCloseOperation = WindowConstants.DISPOSE_ON_CLOSE
 
         isVisible = true
     }

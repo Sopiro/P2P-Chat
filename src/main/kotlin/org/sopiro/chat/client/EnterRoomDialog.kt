@@ -1,10 +1,8 @@
 package org.sopiro.chat.client
 
-import org.sopiro.chat.utils.FontLib
+import org.sopiro.chat.utils.Resources
 import java.awt.BorderLayout
 import java.awt.GridLayout
-import java.awt.event.WindowAdapter
-import java.awt.event.WindowEvent
 import javax.swing.*
 
 class EnterRoomDialog(
@@ -16,15 +14,17 @@ class EnterRoomDialog(
 {
     init
     {
+        this.setIconImage(Resources.icon)
+
         val body = JPanel(GridLayout(1, 2, 10, 5))
         val foot = JPanel()
 
         val lblName = JLabel("닉네임")
-        lblName.font = FontLib.font12
+        lblName.font = Resources.font12
         val jtfName = JTextField(10)
-        jtfName.font = FontLib.font12
+        jtfName.font = Resources.font12
         val okBtn = JButton("확인")
-        okBtn.font = FontLib.font12
+        okBtn.font = Resources.font12
 
         jtfName.addActionListener {
             okBtn.doClick()
@@ -47,7 +47,7 @@ class EnterRoomDialog(
         pack()
         setLocationRelativeTo(null)
 
-        defaultCloseOperation = WindowConstants.DISPOSE_ON_CLOSE;
+        defaultCloseOperation = WindowConstants.DISPOSE_ON_CLOSE
 
         isVisible = true
     }

@@ -2,7 +2,7 @@ package org.sopiro.chat.client
 
 import org.sopiro.chat.server.ClientHandle
 import org.sopiro.chat.server.Server
-import org.sopiro.chat.utils.FontLib
+import org.sopiro.chat.utils.Resources
 import org.sopiro.chat.utils.Parser
 import java.awt.BorderLayout
 import java.awt.Dimension
@@ -43,6 +43,7 @@ class ChatServerWindow(
         // JFrame settings
         window.isResizable = false
         window.defaultCloseOperation = JFrame.DISPOSE_ON_CLOSE
+        window.iconImage = Resources.icon
         (window.contentPane as JComponent).border = BorderFactory.createEmptyBorder(10, 10, 10, 10)
 
         // Layout panels
@@ -62,23 +63,23 @@ class ChatServerWindow(
         screen.lineWrap = true
         screen.isEditable = false
         (screen.caret as DefaultCaret).updatePolicy = DefaultCaret.ALWAYS_UPDATE
-        screen.font = FontLib.font16
+        screen.font = Resources.font16
 
         enterBtn = JButton("입력")
-        enterBtn.font = FontLib.font16
+        enterBtn.font = Resources.font16
 
         cmdLine = JTextField(60)
-        cmdLine.font = FontLib.font16
+        cmdLine.font = Resources.font16
 
         label = JLabel("참가자")
         label.horizontalAlignment = JLabel.CENTER
-        label.font = FontLib.font16
+        label.font = Resources.font16
 
         list = JList()
         list.selectionMode = ListSelectionModel.SINGLE_SELECTION
         list.preferredSize = Dimension(100, 0)
         list.maximumSize = Dimension(100, 1000)
-        list.font = FontLib.font16
+        list.font = Resources.font16
 
         // Add controls into layout panel
         right.add(label, BorderLayout.NORTH)

@@ -2,7 +2,7 @@ package org.sopiro.chat.server
 
 import org.sopiro.chat.client.Client
 import org.sopiro.chat.server.room.RoomManager
-import org.sopiro.chat.utils.FontLib
+import org.sopiro.chat.utils.Resources
 import org.sopiro.chat.utils.Logger
 import org.sopiro.chat.utils.MyIp
 import org.sopiro.chat.utils.Parser
@@ -35,7 +35,7 @@ class ServerWindow(title: String) : Server()
         // JFrame settings
         window.isResizable = false
         window.defaultCloseOperation = JFrame.EXIT_ON_CLOSE
-
+        window.iconImage = Resources.icon
         (window.contentPane as JComponent).border = BorderFactory.createEmptyBorder(10, 10, 10, 10)
 
         // Layout panels
@@ -51,14 +51,14 @@ class ServerWindow(title: String) : Server()
         screen.lineWrap = true
         screen.isEditable = false
         (screen.caret as DefaultCaret).updatePolicy = DefaultCaret.ALWAYS_UPDATE
-        screen.font = FontLib.font16
+        screen.font = Resources.font16
 
         // Foot controls
         enterBtn = JButton("입력")
-        enterBtn.font = FontLib.font12
+        enterBtn.font = Resources.font12
 
         cmdLine = JTextField(60)
-        cmdLine.font = FontLib.font16
+        cmdLine.font = Resources.font16
         cmdLine.text = defaultMsg
 
         // Add controls into layout panel

@@ -4,7 +4,7 @@ import org.sopiro.chat.server.ClientHandle
 import org.sopiro.chat.server.Server
 import org.sopiro.chat.server.room.Room
 import org.sopiro.chat.server.room.RoomManager
-import org.sopiro.chat.utils.FontLib
+import org.sopiro.chat.utils.Resources
 import org.sopiro.chat.utils.Parser
 import java.awt.BorderLayout
 import java.awt.Color
@@ -51,13 +51,14 @@ class ClientWindow(title: String) : Client()
         // JFrame settings
         window.isResizable = false
         window.defaultCloseOperation = JFrame.EXIT_ON_CLOSE
+        window.iconImage = Resources.icon
         (window.contentPane as JComponent).border = BorderFactory.createEmptyBorder(10, 10, 10, 10)
 
         menubar = JMenuBar()
         val menu1 = JMenu("설정")
-        menu1.font = FontLib.font12
+        menu1.font = Resources.font12
         val item1 = JMenuItem("마스터 서버 설정")
-        item1.font = FontLib.font12
+        item1.font = Resources.font12
         menu1.add(item1)
         menubar.add(menu1)
 
@@ -74,11 +75,11 @@ class ClientWindow(title: String) : Client()
 
         // Foot controls
         btnNewRoom = JButton("방만들기")
-        btnNewRoom.font = FontLib.font16
+        btnNewRoom.font = Resources.font16
         btnEnterRoom = JButton("접속")
-        btnEnterRoom.font = FontLib.font16
+        btnEnterRoom.font = Resources.font16
         btnRefresh = JButton("새로고침")
-        btnRefresh.font = FontLib.font16
+        btnRefresh.font = Resources.font16
 
         // Add controls into layout panel
         jpnBody.add(JScrollPane(table))
@@ -174,7 +175,7 @@ class ClientWindow(title: String) : Client()
             {
                 roomData = RoomManager.interpretInfo(parser)!!
                 reloadRoom()
-                checkRoomable();
+                checkRoomable()
             }
 
             "noti" ->
@@ -196,7 +197,7 @@ class ClientWindow(title: String) : Client()
     override fun onServerClosed()
     {
         println("Server closed")
-        alert("Server closed")
+        alert("마스터 서버가 닫혔습니다.")
     }
 
     private fun reloadRoom()
@@ -224,7 +225,7 @@ class ClientWindow(title: String) : Client()
 
         table.model = dtm
         table.rowHeight = 30
-        table.font = FontLib.font16
+        table.font = Resources.font16
 
         val centerRenderer = DefaultTableCellRenderer()
         centerRenderer.horizontalAlignment = JLabel.CENTER
