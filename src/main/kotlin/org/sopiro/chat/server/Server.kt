@@ -25,7 +25,7 @@ abstract class Server()
 
     private var isStarted: Boolean = false
 
-    protected fun start(port: Int): Boolean
+    fun start(port: Int): Boolean
     {
         if (isStarted) return false
         isStarted = true
@@ -169,7 +169,7 @@ abstract class Server()
         }
     }
 
-    protected open fun terminate()
+    open fun terminate()
     {
         println("Terminate Server Program")
 

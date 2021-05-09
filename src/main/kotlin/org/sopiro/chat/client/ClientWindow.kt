@@ -1,5 +1,7 @@
 package org.sopiro.chat.client
 
+import org.sopiro.chat.server.ClientHandle
+import org.sopiro.chat.server.Server
 import org.sopiro.chat.server.room.Room
 import org.sopiro.chat.server.room.RoomManager
 import org.sopiro.chat.utils.FontLib
@@ -14,6 +16,7 @@ import java.util.*
 import javax.swing.*
 import javax.swing.table.DefaultTableCellRenderer
 import javax.swing.table.DefaultTableModel
+import kotlin.concurrent.thread
 
 
 class ClientWindow(title: String) : Client()
@@ -40,6 +43,8 @@ class ClientWindow(title: String) : Client()
     private var myPort = 5678
 
     private var isServerOnline: Boolean = false
+
+    private var amIRoomable: Boolean? = null
 
     init
     {
@@ -134,13 +139,13 @@ class ClientWindow(title: String) : Client()
             MasterServerSettingDialog(window, "마스터 서버 설정", true, serverIP, serverPort) { ip, port ->
                 try
                 {
-                    if(ip.split(".").size != 4) throw Exception()
+                    if (ip.split(".").size != 4) throw Exception()
                     val portInt = Integer.parseInt(port)
-                    
+
                     serverIP = ip
                     serverPort = portInt
                     requestRefresh()
-                }catch (e: Exception)
+                } catch (e: Exception)
                 {
                     alert("서버ip와 port를 제대로 입력해주세요.")
                 }
@@ -169,11 +174,21 @@ class ClientWindow(title: String) : Client()
             {
                 roomData = RoomManager.interpretInfo(parser)!!
                 reloadRoom()
+                checkRoomable();
             }
 
             "noti" ->
             {
                 alert(parser.getOption("m"))
+            }
+
+            "roomable" ->
+            {
+                val roomable = parser.getOption("r")
+
+                amIRoomable = roomable == "true"
+
+                println("방만들기 가능?: $amIRoomable")
             }
         }
     }
@@ -222,27 +237,71 @@ class ClientWindow(title: String) : Client()
         table.columnModel.getColumn(1).minWidth = 230
     }
 
-    private fun newRoom(port: Int, name: String, roomName: String)
+    private fun checkRoomable()
     {
-        window.isVisible = false
-        chatServerWindow = ChatServerWindow(
-            roomName, name,
+        thread {
+            val server = object : Server()
             {
-                window.isVisible = true
-                super.sendToServer("deleteRoom -p \"$it\"")
-            },
-            {
-                super.sendToServer("rmPlus -p \"$it\"")
-            },
-            {
-                super.sendToServer("rmMinus -p \"$it\"")
-            },
-            {
-                super.sendToServer("newRoom -p \"$it\" -hn \"$name\" -rn \"$roomName\"")
+                override fun onWaitClientAccess()
+                {
+                }
+
+                override fun onStartServer(port: Int)
+                {
+                    sendToServer("checkRoomable -p \"$port\"")
+                }
+
+                override fun onClientConnect(handle: ClientHandle)
+                {
+                }
+
+                override fun onReceiveData(handle: ClientHandle, parser: Parser)
+                {
+                }
             }
 
-        )
-        chatServerWindow.launch(port)
+            server.start(myPort)
+
+            while(amIRoomable == null)
+            {
+                Thread.yield()
+            }
+
+            server.terminate()
+        }
+    }
+
+    private fun newRoom(port: Int, name: String, roomName: String)
+    {
+        while (amIRoomable == null)
+        {
+            Thread.yield()
+        }
+
+        if (!amIRoomable!!)
+        {
+            alert("당신은 방을 만들수 없습니다.\n호스트 서버 에러")
+        } else
+        {
+            window.isVisible = false
+            chatServerWindow = ChatServerWindow(
+                roomName, name,
+                {
+                    window.isVisible = true
+                    super.sendToServer("deleteRoom -p \"$it\"")
+                },
+                {
+                    super.sendToServer("rmPlus -p \"$it\"")
+                },
+                {
+                    super.sendToServer("rmMinus -p \"$it\"")
+                },
+                {
+                    super.sendToServer("newRoom -p \"$it\" -hn \"$name\" -rn \"$roomName\"")
+                }
+            )
+            chatServerWindow.launch(port)
+        }
     }
 
     private fun enterTheRoom(myName: String)

@@ -1,6 +1,6 @@
 package org.sopiro.chat.server
 
-import jdk.nashorn.internal.parser.JSONParser
+import org.sopiro.chat.client.Client
 import org.sopiro.chat.server.room.RoomManager
 import org.sopiro.chat.utils.FontLib
 import org.sopiro.chat.utils.Logger
@@ -10,10 +10,6 @@ import java.awt.BorderLayout
 import java.awt.FlowLayout
 import java.awt.event.WindowAdapter
 import java.awt.event.WindowEvent
-import java.io.BufferedReader
-import java.io.InputStreamReader
-import java.net.Inet4Address
-import java.net.URL
 import javax.swing.*
 import javax.swing.text.DefaultCaret
 import kotlin.concurrent.thread
@@ -231,6 +227,20 @@ class ServerWindow(title: String) : Server()
                 logger.log(parser.getOption("m").toString())
             }
 
+            "checkRoomable" ->
+            {
+                val ip = handle.ip
+                val port = Integer.parseInt(parser.getOption("p"))
+
+                if (tryConnect(ip, port))
+                {
+                    send(handle, "roomable -r true")
+                } else
+                {
+                    send(handle, "roomable -r false")
+                }
+            }
+
             "newRoom" ->
             {
                 val ip = handle.ip
@@ -291,6 +301,35 @@ class ServerWindow(title: String) : Server()
         logger.log("${handle.ip} goes out")
 
         super.onClientDisconnect(handle)
+    }
+
+    private fun tryConnect(ip: String, port: Int): Boolean
+    {
+        var res = false
+
+        val t = thread {
+            val test = object : Client()
+            {
+                override fun onConnect(isServerOnline: Boolean)
+                {
+                    res = isServerOnline
+                }
+
+                override fun onReceiveData(parser: Parser)
+                {
+                }
+
+                override fun onServerClosed()
+                {
+                }
+            }
+
+            test.start(ip, port)
+        }
+
+        t.join()
+
+        return res
     }
 
     private fun notifyToAll(message: String)

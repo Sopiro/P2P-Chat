@@ -11,7 +11,7 @@ import java.lang.Exception
 import java.net.ConnectException
 import java.net.Socket
 
-abstract class Client
+abstract class Client()
 {
     private val scope: CoroutineScope = CoroutineScope(Dispatchers.Default)
 
@@ -21,7 +21,7 @@ abstract class Client
 
     private var isServerOnline: Boolean = false
 
-    protected fun start(serverIp: String, port: Int)
+    fun start(serverIp: String, port: Int)
     {
         try
         {
@@ -112,7 +112,7 @@ abstract class Client
         }
     }
 
-    protected fun terminate()
+    fun terminate()
     {
         println("Terminate Client Program")
 
