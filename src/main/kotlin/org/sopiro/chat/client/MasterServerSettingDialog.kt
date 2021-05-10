@@ -5,6 +5,7 @@ import java.awt.BorderLayout
 import java.awt.GridLayout
 import javax.swing.*
 
+
 class MasterServerSettingDialog(
     window: JFrame,
     title: String,

@@ -26,8 +26,6 @@ class ServerWindow(title: String) : Server()
 
     private var logger: Logger
 
-    private val defaultMsg = "start -p 1234"
-
     private var port: Int? = null
 
     init
@@ -59,7 +57,7 @@ class ServerWindow(title: String) : Server()
 
         cmdLine = JTextField(60)
         cmdLine.font = Resources.font16
-        cmdLine.text = defaultMsg
+        cmdLine.text = Resources.DEFAULT_MSG
 
         // Add controls into layout panel
         body.add(JScrollPane(screen, 20, 30), BorderLayout.CENTER)
@@ -128,7 +126,26 @@ class ServerWindow(title: String) : Server()
                 logger.log("$numClients Clients are existing, ${RoomManager.howMany()} Rooms exist")
             }
 
+            "ll" ->
+            {
+                logger.log("$numClients Clients are existing, ${RoomManager.howMany()} Rooms exist")
+
+                logger.logNoTime("-------------------------------------------------")
+                logger.logNoTime("")
+                clients.forEach {
+                    logger.logNoTime(it.ip)
+                }
+                logger.logNoTime("-------------------------------------------------")
+            }
+
             "rl" ->
+            {
+                RoomManager.rooms.forEach {
+                    logger.logNoTime("hostName: ${it.hostName} | roomName: ${it.roomName} | numMembers: ${it.numMembers}")
+                }
+            }
+
+            "rll" ->
             {
                 logger.log("Room lists")
 
@@ -154,7 +171,7 @@ class ServerWindow(title: String) : Server()
             "ip" ->
             {
                 thread {
-                    logger.log(MyIp.ip())
+                    logger.log("Your IP: ${MyIp.ip()}")
                 }
             }
 
@@ -166,26 +183,28 @@ class ServerWindow(title: String) : Server()
             "help" ->
             {
                 logger.log("help")
-                logger.logNoTime("-------------------------------------------------")
-                logger.logNoTime("[start] -> Start a server program")
-                logger.logNoTime("    usage: start -p \"port\"")
-                logger.logNoTime("[ls] -> Show user, room status")
-                logger.logNoTime("    usage: ls")
-                logger.logNoTime("[rl] -> Show room list")
-                logger.logNoTime("    usage: rl")
-                logger.logNoTime("[cls, clear] -> Clear screen")
-                logger.logNoTime("    usage: cls, clear")
-                logger.logNoTime("[noti] -> Notify a message to all clients")
-                logger.logNoTime("    usage: noti -m \"message\"")
-                logger.logNoTime("[ip] -> show your ip")
-                logger.logNoTime("    ip:")
-                logger.logNoTime("[port] -> show port that program run on")
-                logger.logNoTime("    port:")
-                logger.logNoTime("[help] -> Show this")
-                logger.logNoTime("    usage: help")
-                logger.logNoTime("[exit] -> End server program")
-                logger.logNoTime("    usage: exit")
-                logger.logNoTime("-------------------------------------------------")
+                logger.logNoTime(
+                    """
+                    -------------------------------------------------
+                    [start] -> Start a server program
+                        usage: start -p "port"
+                    [ls] -> log user, room status
+                        usage: ls
+                    [cls, clear] -> Clear screen
+                        usage: cls, clear
+                    [noti] -> Notify a message to all clients
+                        usage: noti -m "message"
+                    [ip] -> show your ip
+                        usage: ip
+                    [port] -> show port that program run on
+                        usage: port
+                    [help] -> Show this
+                        usage: help
+                    [exit] -> End server program
+                        usage: exit
+                    -------------------------------------------------
+                """.trimIndent()
+                )
             }
 
             "exit" ->

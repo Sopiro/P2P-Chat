@@ -1,7 +1,7 @@
 package org.sopiro.chat.client
 
-import org.sopiro.chat.utils.Resources
 import org.sopiro.chat.utils.Parser
+import org.sopiro.chat.utils.Resources
 import java.awt.BorderLayout
 import java.awt.Dimension
 import java.awt.FlowLayout

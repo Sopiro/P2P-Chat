@@ -10,6 +10,8 @@ object Resources
     val font12 = Font("sansserif", Font.PLAIN, 12)
     val icon: Image
 
+    val DEFAULT_MSG = "start -p 1234"
+
     var language: Lang = Lang.ENG
 
     enum class Lang
@@ -243,7 +245,6 @@ object Resources
             else
                 "Room List"
         }
-
 
     init
     {

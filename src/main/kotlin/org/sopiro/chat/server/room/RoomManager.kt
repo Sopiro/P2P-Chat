@@ -1,8 +1,7 @@
 package org.sopiro.chat.server.room
 
 import org.sopiro.chat.utils.Parser
-import java.util.*
-import kotlin.collections.ArrayList
+
 
 object RoomManager
 {
@@ -90,7 +89,6 @@ object RoomManager
 
         val size = Integer.parseInt(parser.tokens[1])
         val res = ArrayList<Room>()
-        var row: Vector<String>
 
         for (i in 0 until size)
         {

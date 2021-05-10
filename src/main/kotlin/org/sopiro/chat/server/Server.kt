@@ -11,12 +11,14 @@ import java.lang.Exception
 import java.net.ServerSocket
 import java.net.SocketException
 
+
 abstract class Server()
 {
     private val scope: CoroutineScope = CoroutineScope(Dispatchers.Default)
 
     private var serverSocket: ServerSocket? = null
-    private val clients: MutableList<ClientHandle> = ArrayList()
+    protected val clients: MutableList<ClientHandle> = ArrayList()
+
 
     protected val numClients: Int
         get()
