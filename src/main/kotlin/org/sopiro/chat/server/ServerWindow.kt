@@ -131,7 +131,7 @@ class ServerWindow(title: String) : Server()
                 logger.log("$numClients Clients are existing, ${RoomManager.howMany()} Rooms exist")
 
                 logger.logNoTime("-------------------------------------------------")
-                logger.logNoTime("")
+                logger.logNoTime("Client IP list")
                 clients.forEach {
                     logger.logNoTime(it.ip)
                 }
@@ -149,9 +149,11 @@ class ServerWindow(title: String) : Server()
             {
                 logger.log("Room lists")
 
+                logger.logNoTime("-------------------------------------------------")
                 RoomManager.rooms.forEach {
                     logger.logNoTime("ip:${it.ip} | port: ${it.port} | hostName: ${it.hostName} | roomName: ${it.roomName} | numMembers: ${it.numMembers}")
                 }
+                logger.logNoTime("-------------------------------------------------")
             }
 
             "cls", "clear" ->
@@ -190,6 +192,12 @@ class ServerWindow(title: String) : Server()
                         usage: start -p "port"
                     [ls] -> log user, room status
                         usage: ls
+                    [ll] -> log user ip list
+                        usage: ll
+                    [rl] -> log room list
+                        usage: rl
+                    [rll] -> log room list in detail
+                        usage: rll
                     [cls, clear] -> Clear screen
                         usage: cls, clear
                     [noti] -> Notify a message to all clients
