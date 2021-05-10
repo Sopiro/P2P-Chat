@@ -55,13 +55,13 @@ class ChatClientWindow(
         screen.font = Resources.font16
 
         // Foot controls
-        enterBtn = JButton("입력")
+        enterBtn = JButton(Resources.ENTER)
         enterBtn.font = Resources.font16
         cmdLine = JTextField(60)
         cmdLine.font = Resources.font16
 
         // Right controls
-        label = JLabel("참가자")
+        label = JLabel(Resources.MEMBERS)
         label.horizontalAlignment = JLabel.CENTER
         label.font = Resources.font16
 
@@ -161,6 +161,6 @@ class ChatClientWindow(
     override fun onServerClosed()
     {
         window.dispatchEvent(WindowEvent(window, WindowEvent.WINDOW_CLOSING))
-        JOptionPane.showMessageDialog(window, "방장이 방을 나갔습니다.", "알림", JOptionPane.PLAIN_MESSAGE)
+        JOptionPane.showMessageDialog(window, Resources.LEFT_ROOM, Resources.NOTICE, JOptionPane.PLAIN_MESSAGE)
     }
 }

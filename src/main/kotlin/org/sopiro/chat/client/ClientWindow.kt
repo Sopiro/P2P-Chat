@@ -4,14 +4,13 @@ import org.sopiro.chat.server.ClientHandle
 import org.sopiro.chat.server.Server
 import org.sopiro.chat.server.room.Room
 import org.sopiro.chat.server.room.RoomManager
-import org.sopiro.chat.utils.Resources
 import org.sopiro.chat.utils.Parser
+import org.sopiro.chat.utils.Resources
 import java.awt.BorderLayout
 import java.awt.Color
 import java.awt.FlowLayout
 import java.awt.event.WindowAdapter
 import java.awt.event.WindowEvent
-import java.lang.Exception
 import java.util.*
 import javax.swing.*
 import javax.swing.table.DefaultTableCellRenderer
@@ -33,18 +32,22 @@ class ClientWindow(title: String) : Client()
     private var btnRefresh: JButton
     private var menubar: JMenuBar
 
-    private val columnNames = Vector(listOf("방장", "방제", "인원수"))
+    private var columnNames = Vector(Resources.COLUMN_NAMES)
 
+    private val rowData = Vector<Vector<String>>()
     private lateinit var roomData: List<Room>
 
     private var serverIP = "14.38.149.139"
     private var serverPort = 1234
-
     private var myPort = 5678
-
     private var isServerOnline: Boolean = false
-
     private var amIRoomable: Boolean? = null
+
+    private val menu1: JMenu
+    private val subMenu: JMenu
+    private val item1: JMenuItem
+    private val item2: JMenuItem
+    private val item3: JMenuItem
 
     init
     {
@@ -55,11 +58,20 @@ class ClientWindow(title: String) : Client()
         (window.contentPane as JComponent).border = BorderFactory.createEmptyBorder(10, 10, 10, 10)
 
         menubar = JMenuBar()
-        val menu1 = JMenu("설정")
+        menu1 = JMenu(Resources.SETTINGS)
         menu1.font = Resources.font12
-        val item1 = JMenuItem("마스터 서버 설정")
+        item1 = JMenuItem(Resources.MASTER_SERVER_SETTING)
+        subMenu = JMenu(Resources.LANG_SETT)
+        item2 = JMenuItem("한국어")
+        item3 = JMenuItem("english")
+        subMenu.font = Resources.font12
         item1.font = Resources.font12
+        item2.font = Resources.font12
+        item3.font = Resources.font12
         menu1.add(item1)
+        subMenu.add(item2)
+        subMenu.add(item3)
+        menu1.add(subMenu)
         menubar.add(menu1)
 
         // Layout panels
@@ -70,15 +82,33 @@ class ClientWindow(title: String) : Client()
         jpnFoot.layout = FlowLayout(FlowLayout.RIGHT)
 
         // Body controls
-        table = JTable()
+        val tm: DefaultTableModel = object : DefaultTableModel(rowData, columnNames)
+        {
+            override fun isCellEditable(row: Int, column: Int): Boolean
+            {
+                return false
+            }
+        }
+
+        table = JTable(tm)
+        table.rowHeight = 30
+        table.font = Resources.font16
+        val centerRenderer = DefaultTableCellRenderer()
+        centerRenderer.horizontalAlignment = JLabel.CENTER
+
+        table.columnModel.getColumn(0).cellRenderer = centerRenderer
+        table.columnModel.getColumn(1).cellRenderer = centerRenderer
+        table.columnModel.getColumn(2).cellRenderer = centerRenderer
+
+        table.columnModel.getColumn(1).minWidth = 230
         table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION)
 
         // Foot controls
-        btnNewRoom = JButton("방만들기")
+        btnNewRoom = JButton(Resources.NEW_ROOM)
         btnNewRoom.font = Resources.font16
-        btnEnterRoom = JButton("접속")
+        btnEnterRoom = JButton(Resources.ENTER_ROOM)
         btnEnterRoom.font = Resources.font16
-        btnRefresh = JButton("새로고침")
+        btnRefresh = JButton(Resources.REFRESH)
         btnRefresh.font = Resources.font16
 
         // Add controls into layout panel
@@ -105,10 +135,10 @@ class ClientWindow(title: String) : Client()
             }
         })
         btnNewRoom.addActionListener {
-            NewRoomDialog(window, "방 만들기", true) { name: String, roomName: String ->
+            NewRoomDialog(window, Resources.NEW_ROOM, true) { name: String, roomName: String ->
                 if (name.trim().isEmpty() || roomName.trim().isEmpty())
                 {
-                    alert("제대로 입력해주세요")
+                    alert(Resources.CORRECT_PLS)
                 } else
                 {
                     newRoom(myPort, name, roomName)
@@ -116,20 +146,20 @@ class ClientWindow(title: String) : Client()
             }
         }
         btnEnterRoom.addActionListener {
-            EnterRoomDialog(window, "방 입장", true) { name: String ->
-                if (table.selectedRow == -1)
-                {
-                    alert("방을 선택해 주세요")
-                    return@EnterRoomDialog
+            if (table.selectedRow != -1)
+            {
+                EnterRoomDialog(window, Resources.ENTER_ROOM, true) { name: String ->
+                    if (name.trim().isEmpty())
+                    {
+                        alert(Resources.CORRECT_PLS)
+                    } else
+                    {
+                        enterTheRoom(name)
+                    }
                 }
-
-                if (name.trim().isEmpty())
-                {
-                    alert("제대로 입력해주세요 ")
-                } else
-                {
-                    enterTheRoom(name)
-                }
+            } else
+            {
+                alert(Resources.SELECT_PLS)
             }
         }
         btnRefresh.addActionListener {
@@ -137,7 +167,7 @@ class ClientWindow(title: String) : Client()
         }
 
         item1.addActionListener {
-            MasterServerSettingDialog(window, "마스터 서버 설정", true, serverIP, serverPort) { ip, port ->
+            MasterServerSettingDialog(window, Resources.MASTER_SERVER_SETTING, true, serverIP, serverPort) { ip, port ->
                 try
                 {
                     if (ip.split(".").size != 4) throw Exception()
@@ -148,9 +178,17 @@ class ClientWindow(title: String) : Client()
                     requestRefresh()
                 } catch (e: Exception)
                 {
-                    alert("서버ip와 port를 제대로 입력해주세요.")
+                    alert(Resources.CORRECT_PLS_IP_PORT)
                 }
             }
+        }
+        item2.addActionListener {
+            Resources.language = Resources.Lang.KOR
+            languageChanged()
+        }
+        item3.addActionListener {
+            Resources.language = Resources.Lang.ENG
+            languageChanged()
         }
 
         window.isVisible = true
@@ -158,12 +196,50 @@ class ClientWindow(title: String) : Client()
         super.start(serverIP, serverPort)
     }
 
+    private fun languageChanged()
+    {
+        columnNames = Vector(Resources.COLUMN_NAMES)
+
+        val tm: DefaultTableModel = object : DefaultTableModel(rowData, columnNames)
+        {
+            override fun isCellEditable(row: Int, column: Int): Boolean
+            {
+                return false
+            }
+        }
+
+        table.model = tm
+
+        table.rowHeight = 30
+        table.font = Resources.font16
+        val centerRenderer = DefaultTableCellRenderer()
+        centerRenderer.horizontalAlignment = JLabel.CENTER
+
+        table.columnModel.getColumn(0).cellRenderer = centerRenderer
+        table.columnModel.getColumn(1).cellRenderer = centerRenderer
+        table.columnModel.getColumn(2).cellRenderer = centerRenderer
+
+        table.columnModel.getColumn(1).minWidth = 230
+        table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION)
+
+        table.updateUI()
+
+        btnNewRoom.text = Resources.NEW_ROOM
+        btnEnterRoom.text = Resources.ENTER_ROOM
+        btnRefresh.text = Resources.REFRESH
+        menu1.text = Resources.SETTINGS
+        item1.text = Resources.MASTER_SERVER_SETTING
+        subMenu.text = Resources.LANG_SETT
+
+        window.title = Resources.ROOM_LIST
+    }
+
     override fun onConnect(isServerOnline: Boolean)
     {
         this.isServerOnline = isServerOnline
         if (!isServerOnline)
         {
-            alert("마스터 서버가 닫혀있습니다.")
+            alert(Resources.MASTER_SERVER_CLOSED)
         }
     }
 
@@ -197,12 +273,12 @@ class ClientWindow(title: String) : Client()
     override fun onServerClosed()
     {
         println("Server closed")
-        alert("마스터 서버가 닫혔습니다.")
+        alert(Resources.MASTER_SERVER_JUST_CLOSED)
     }
 
     private fun reloadRoom()
     {
-        val rowData = Vector<Vector<String>>()
+        rowData.clear()
 
         for (i in roomData.indices)
         {
@@ -215,27 +291,7 @@ class ClientWindow(title: String) : Client()
             rowData.add(row)
         }
 
-        val dtm: DefaultTableModel = object : DefaultTableModel(rowData, columnNames)
-        {
-            override fun isCellEditable(row: Int, column: Int): Boolean
-            {
-                return false
-            }
-        }
-
-        table.model = dtm
-        table.rowHeight = 30
-        table.font = Resources.font16
-
-        val centerRenderer = DefaultTableCellRenderer()
-        centerRenderer.horizontalAlignment = JLabel.CENTER
-
-        table.columnModel.getColumn(0).cellRenderer = centerRenderer
-        table.columnModel.getColumn(1).cellRenderer = centerRenderer
-        table.columnModel.getColumn(2).cellRenderer = centerRenderer
-
         table.updateUI()
-        table.columnModel.getColumn(1).minWidth = 230
     }
 
     private fun checkRoomable()
@@ -283,7 +339,7 @@ class ClientWindow(title: String) : Client()
 
         if (!amIRoomable!!)
         {
-            alert("당신은 방을 만들수 없습니다.\n호스트 서버 에러")
+            alert(Resources.HOST_ERR)
         } else
         {
             window.isVisible = false
@@ -336,6 +392,6 @@ class ClientWindow(title: String) : Client()
 
     private fun alert(message: Any?)
     {
-        JOptionPane.showMessageDialog(window, message, "알림", JOptionPane.PLAIN_MESSAGE)
+        JOptionPane.showMessageDialog(window, message, Resources.NOTICE, JOptionPane.PLAIN_MESSAGE)
     }
 }

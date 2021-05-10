@@ -19,11 +19,11 @@ class EnterRoomDialog(
         val body = JPanel(GridLayout(1, 2, 10, 5))
         val foot = JPanel()
 
-        val lblName = JLabel("닉네임")
+        val lblName = JLabel(Resources.NICK_NAME)
         lblName.font = Resources.font12
         val jtfName = JTextField(10)
         jtfName.font = Resources.font12
-        val okBtn = JButton("확인")
+        val okBtn = JButton(Resources.OK)
         okBtn.font = Resources.font12
 
         jtfName.addActionListener {

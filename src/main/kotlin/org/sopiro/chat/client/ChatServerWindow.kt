@@ -65,13 +65,13 @@ class ChatServerWindow(
         (screen.caret as DefaultCaret).updatePolicy = DefaultCaret.ALWAYS_UPDATE
         screen.font = Resources.font16
 
-        enterBtn = JButton("입력")
+        enterBtn = JButton(Resources.ENTER)
         enterBtn.font = Resources.font16
 
         cmdLine = JTextField(60)
         cmdLine.font = Resources.font16
 
-        label = JLabel("참가자")
+        label = JLabel(Resources.MEMBERS)
         label.horizontalAlignment = JLabel.CENTER
         label.font = Resources.font16
 
@@ -157,7 +157,7 @@ class ChatServerWindow(
 
         val name = findName(handle.ip)
 
-        newMessage("$name 님이 퇴장하셨습니다.")
+        newMessage("$name ${Resources.SOMEONE_OUT}")
         deleteMember(handle.ip)
     }
 
@@ -170,7 +170,7 @@ class ChatServerWindow(
                 val ip = handle.ip
                 val name = parser.getOption("n")
 
-                newMessage("$name 님이 입장하셨습니다.")
+                newMessage("$name ${Resources.SOMEONE_ENTER}")
                 addMember(ip, name!!)
             }
 

@@ -54,7 +54,7 @@ class ServerWindow(title: String) : Server()
         screen.font = Resources.font16
 
         // Foot controls
-        enterBtn = JButton("입력")
+        enterBtn = JButton("Enter")
         enterBtn.font = Resources.font12
 
         cmdLine = JTextField(60)

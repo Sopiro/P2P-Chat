@@ -8,5 +8,5 @@ fun main()
 {
     UIManager.put("OptionPane.messageFont", Resources.font12)
     UIManager.put("OptionPane.buttonFont", Resources.font12)
-    ClientWindow("방 목록")
+    ClientWindow(Resources.ROOM_LIST)
 }

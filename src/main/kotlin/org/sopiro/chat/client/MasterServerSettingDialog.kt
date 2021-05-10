@@ -22,9 +22,9 @@ class MasterServerSettingDialog(
         val body = JPanel(GridLayout(2, 2, 10, 5))
         val foot = JPanel()
 
-        val lblIp = JLabel("마스터서버 IP")
+        val lblIp = JLabel(Resources.MS_IP)
         lblIp.font = Resources.font12
-        val lblPort = JLabel("마스터서버 port")
+        val lblPort = JLabel(Resources.MS_PORT)
         lblPort.font = Resources.font12
         val jtfIp = JTextField(10)
         jtfIp.text = serverIP
@@ -32,7 +32,7 @@ class MasterServerSettingDialog(
         val jtfPort = JTextField(10)
         jtfPort.text = serverPort.toString()
         jtfPort.font = Resources.font12
-        val okBtn = JButton("확인")
+        val okBtn = JButton(Resources.OK)
         okBtn.font = Resources.font12
 
         jtfPort.addActionListener {
@@ -58,6 +58,7 @@ class MasterServerSettingDialog(
         pack()
         setLocationRelativeTo(null)
 
+        defaultCloseOperation = WindowConstants.DISPOSE_ON_CLOSE
         defaultCloseOperation = WindowConstants.DISPOSE_ON_CLOSE
 
         isVisible = true
