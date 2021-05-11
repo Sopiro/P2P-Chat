@@ -265,7 +265,7 @@ class ClientWindow(title: String) : Client()
 
                 amIRoomable = roomable == "true"
 
-                println("Am i able to make a room?: $amIRoomable")
+//                println("Am i able to make a room?: $amIRoomable")
             }
         }
     }

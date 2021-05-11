@@ -123,12 +123,12 @@ class ServerWindow(title: String) : Server()
 
             "ls" ->
             {
-                logger.log("$numClients Clients are existing, ${RoomManager.howMany()} Rooms exist")
+                logger.log("Clients: $numClients, Rooms: ${RoomManager.howMany()}")
             }
 
             "ll" ->
             {
-                logger.log("$numClients Clients are existing, ${RoomManager.howMany()} Rooms exist")
+                logger.log("Clients: $numClients, Rooms: ${RoomManager.howMany()}")
 
                 logger.logNoTime("-------------------------------------------------")
                 logger.logNoTime("Client IP list")
@@ -190,21 +190,21 @@ class ServerWindow(title: String) : Server()
                     -------------------------------------------------
                     [start] -> Start a server program
                         usage: start -p "port"
-                    [ls] -> log user, room status
+                    [ls] -> Log user, room status
                         usage: ls
-                    [ll] -> log user ip list
+                    [ll] -> Log user ip list
                         usage: ll
-                    [rl] -> log room list
+                    [rl] -> Log room list
                         usage: rl
-                    [rll] -> log room list in detail
+                    [rll] -> Log room list in detail
                         usage: rll
                     [cls, clear] -> Clear screen
                         usage: cls, clear
                     [noti] -> Notify a message to all clients
                         usage: noti -m "message"
-                    [ip] -> show your ip
+                    [ip] -> Show your ip
                         usage: ip
-                    [port] -> show port that program run on
+                    [port] -> Show the port where the program runs on
                         usage: port
                     [help] -> Show this
                         usage: help
@@ -229,7 +229,7 @@ class ServerWindow(title: String) : Server()
 
     override fun onStartServer(port: Int)
     {
-        logger.log("Server started on : $port")
+        logger.log("Server started on the port of: $port")
     }
 
     override fun onWaitClientAccess()
