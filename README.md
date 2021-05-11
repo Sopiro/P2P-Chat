@@ -6,8 +6,8 @@ If you make a room, you do host the server! [Peer-to-peer(P2P)](https://en.wikip
 
 ## Preview
 
-####1
+#### 1
 ![img](.github/preview1.gif)
 
-####2
+#### 2
 ![img](.github/preview2.gif)
