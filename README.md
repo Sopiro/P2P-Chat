@@ -1,6 +1,6 @@
 # Room based Peer-to-Peer Chat Server
 
-If you make a room, you do host the server! [Peer-to-peer(P2P)](https://en.wikipedia.org/wiki/Peer-to-peer)!
+If you create a room, you do host the server! [Peer-to-peer(P2P)](https://en.wikipedia.org/wiki/Peer-to-peer)!
 
 [video](https://youtu.be/hDJYDsDg6Cs)
 
