@@ -2,12 +2,17 @@
 
 If you create a room, you do host the server! [Peer-to-peer(P2P)](https://en.wikipedia.org/wiki/Peer-to-peer)!
 
-[video](https://youtu.be/hDJYDsDg6Cs)
+Video: https://youtu.be/hDJYDsDg6Cs
+
+## Features
+- Master name server
+- p2p Architecture
+- Coroutine based 
+- Extendable asynchronous [server](https://github.com/Sopiro/Room-based-p2p-chat/blob/master/src/main/kotlin/org/sopiro/chat/server/Server.kt)-[client](https://github.com/Sopiro/Room-based-p2p-chat/blob/master/src/main/kotlin/org/sopiro/chat/client/Client.kt) wrappers  
+- Cross-platform(Windows, Linux, macOS)  
 
 ## Preview
 
-#### 1
 ![img](.github/preview1.gif)
 
-#### 2
 ![img](.github/preview2.gif)
