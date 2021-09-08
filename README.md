@@ -7,8 +7,7 @@ Video: https://youtu.be/hDJYDsDg6Cs
 ## Features
 - Master name server
 - p2p Architecture
-- Coroutine based 
-- Extendable asynchronous [server](https://github.com/Sopiro/Room-based-p2p-chat/blob/master/src/main/kotlin/org/sopiro/chat/server/Server.kt)-[client](https://github.com/Sopiro/Room-based-p2p-chat/blob/master/src/main/kotlin/org/sopiro/chat/client/Client.kt) wrappers  
+- Coroutine based synchronous server model
 - Cross-platform(Windows, Linux, macOS)  
 
 ## Preview
