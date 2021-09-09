@@ -7,7 +7,7 @@ Video: https://youtu.be/hDJYDsDg6Cs
 ## Features
 - Master name server
 - p2p Architecture
-- Coroutine based synchronous server model
+- Coroutine(Thread pool) based synchronous server model
 - Cross-platform(Windows, Linux, macOS)  
 
 ## Preview
